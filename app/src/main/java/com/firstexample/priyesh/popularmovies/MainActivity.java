@@ -1,10 +1,18 @@
 package com.firstexample.priyesh.popularmovies;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
@@ -24,36 +32,131 @@ import java.net.URL;
 public class MainActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private String overview,release_date,vote_average,original_title,moviePoster;
+    private String first_sort_order;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        FetchMovieTask fetchMovieTask = new FetchMovieTask();
-        //String[] posterArray = null;
-        fetchMovieTask.execute("popular");
+        updateMovies();
     }
 
-    public class FetchMovieTask extends AsyncTask<String,Void,String[]>{
+
+    //To check for internet connection
+    public boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null &&
+                cm.getActiveNetworkInfo().isConnectedOrConnecting();
+    }
+
+    private void updateMovies() {
+        if(isOnline()) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            first_sort_order = prefs.getString(getString(R.string.sort_key),
+                    getString(R.string.pref_sort_popular));
+
+            FetchMovieTask fetchMovieTask = new FetchMovieTask();
+            fetchMovieTask.execute(first_sort_order);
+        }
+        else
+        {
+            Toast.makeText(this,"Network Issue",Toast.LENGTH_SHORT).show();
+            Log.v(LOG_TAG,"Network error");
+        }
+    }
+
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        //will check whether the preference has changed or not
+        if(!first_sort_order.equals(prefs.getString(getString(R.string.sort_key),
+                getString(R.string.pref_sort_popular)))) {
+            updateMovies();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.mainactivity,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if(id==R.id.settings)
+        {
+            startActivity(new Intent(this,Settings.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    public class FetchMovieTask extends AsyncTask<String,Void,String>{
+
+        final String POSTER_PATH = "poster_path";
+        final String RELEASE_DATE = "release_date";
+        final String OVERVIEW = "overview";
+        final String ORIGINAL_TITLE = "original_title";
+        final String VOTE_AVERAGE = "vote_average";
+        final String RESULT_STRING = "results";
+        final String BASE_URL = "http://image.tmdb.org/t/p/w185/";
 
         @Override
-        protected void onPostExecute(String[] posterArray) {
-            //super.onPostExecute(strings);
+        protected void onPostExecute(final String movieString) {
             GridView view = (GridView) findViewById(R.id.movies_grid);
+            String[] posterArray = new String[0];
+            try {
+                posterArray = getDataFromJSON(movieString);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             view.setAdapter(new ImageAdapter(MainActivity.this,posterArray));
 
             view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Toast.makeText(MainActivity.this,LOG_TAG,Toast.LENGTH_SHORT).show();
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+                {
+                    Intent intent = new Intent(MainActivity.this,DetailActivity.class);
+                    Bundle bundle = new Bundle();
+
+                    JSONObject posterJSON = null;
+                    try {
+                        posterJSON = new JSONObject(movieString);
+                        JSONArray movieArray = posterJSON.getJSONArray(RESULT_STRING);
+                        JSONObject movieDetails = movieArray.getJSONObject(position);
+                        //To retrieve details of the selected movie
+                        moviePoster = movieDetails.getString(POSTER_PATH);
+                        release_date = movieDetails.getString(RELEASE_DATE);
+                        overview = movieDetails.getString(OVERVIEW);
+                        original_title = movieDetails.getString(ORIGINAL_TITLE);
+                        vote_average = movieDetails.getString(VOTE_AVERAGE);
+                        moviePoster = BASE_URL + moviePoster;
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    //To pass the data to next activity
+                    bundle.putString(ORIGINAL_TITLE,original_title);
+                    bundle.putString(RELEASE_DATE,release_date);
+                    bundle.putString(VOTE_AVERAGE,vote_average);
+                    bundle.putString(OVERVIEW,overview);
+                    bundle.putString(POSTER_PATH,moviePoster);
+                    intent.putExtras(bundle);
+                    startActivity(intent);
                 }
             });
 
         }
 
         @Override
-        protected String[] doInBackground(String... params) {
+        protected String doInBackground(String... params) {
 
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
@@ -61,7 +164,6 @@ public class MainActivity extends AppCompatActivity {
             final String MOVIE_BASE_URL = "https://api.themoviedb.org/3/movie?";
             final String APPID_PARAM = "api_key";
             String movieString = null;
-
 
             try
             {
@@ -75,12 +177,10 @@ public class MainActivity extends AppCompatActivity {
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
 
-                //Log.v(LOG_TAG,url.toString());
                 // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
                 StringBuffer buffer = new StringBuffer();
                 if (inputStream == null) {
-                    // Nothing to do.
                     return null;
                 }
                 reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -94,16 +194,14 @@ public class MainActivity extends AppCompatActivity {
                 }
                 movieString = buffer.toString();
                 Log.v(LOG_TAG,movieString);
-                if (buffer.length() == 0) {
+                if (buffer.length() == 0)
+                {
                     // Stream was empty.  No point in parsing.
                     return null;
                 }
-                else {
-                    try {
-                        return getPosterFromJSON(movieString);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+                else
+                {
+                    return movieString;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -122,12 +220,8 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
 
-        private String[] getPosterFromJSON(String movieString) throws JSONException
+        private String[] getDataFromJSON(String movieString) throws JSONException
         {
-            final String RESULT_STRING = "results";
-            final String POSTER_PATH = "poster_path";
-            final String BASE_URL = "http://image.tmdb.org/t/p/w185/";
-
             JSONObject posterJSON = new JSONObject(movieString);
             JSONArray posterArray = posterJSON.getJSONArray(RESULT_STRING);
 

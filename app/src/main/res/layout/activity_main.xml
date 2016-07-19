@@ -2,11 +2,12 @@
 <GridView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/movies_grid"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:numColumns="auto_fit"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:numColumns="2"
     android:stretchMode="columnWidth"
     android:gravity="center"
+    android:adjustViewBounds="true"
     tools:context="com.firstexample.priyesh.popularmovies.MainActivity">
 
 </GridView>

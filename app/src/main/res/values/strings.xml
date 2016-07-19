@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">PopularMovies</string>
+    <string name="settings_menu">Settings</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="pref_sort_label_popular">Popular</string>
+    <string name="pref_sort_label_top_rated">Top-Rated</string>
+    <string name="pref_sort_popular">popular</string>
+    <string name="pref_sort_top_rated">top_rated</string>
+    <string name="sort_title">Sort Order</string>
+    <string name="sort_key">order</string>
 </resources>

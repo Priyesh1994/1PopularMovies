@@ -72,11 +72,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        //will check whether the preference has changed or not
-        if(!first_sort_order.equals(prefs.getString(getString(R.string.sort_key),
-                getString(R.string.pref_sort_popular)))) {
-            updateMovies();
+        if(isOnline()) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            //will check whether the preference has changed or not
+            if (!first_sort_order.equals(prefs.getString(getString(R.string.sort_key),
+                    getString(R.string.pref_sort_popular)))) {
+                updateMovies();
+            }
+        }
+        else
+        {
+            Toast.makeText(this,"Network Issue",Toast.LENGTH_SHORT).show();
+            Log.v(LOG_TAG,"Network error");
         }
     }
 

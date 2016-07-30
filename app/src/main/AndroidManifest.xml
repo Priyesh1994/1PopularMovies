@@ -20,6 +20,11 @@
         </activity>
         <activity android:name=".Settings" />
         <activity android:name=".DetailActivity"></activity>
+        <provider
+            android:authorities="com.firstexample.priyesh.popularmovies"
+            android:name=".data.MovieProvider"
+            android:exported="false"
+            android:syncable="true"/>
     </application>
 
 </manifest>

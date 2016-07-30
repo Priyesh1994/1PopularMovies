@@ -4,7 +4,6 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
@@ -48,15 +47,18 @@ public class ImageAdapter extends BaseAdapter {
             /*Having a issue here.
             ** Not able to dynamically set the row height of the poster.
              */
-            imageView.setLayoutParams(new GridView.LayoutParams(GridView.AUTO_FIT, 800));
+            //imageView.setLayoutParams(new GridView.LayoutParams(GridView.AUTO_FIT, 800));
+            imageView.setAdjustViewBounds(true);
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         }
         else
         {
             imageView = (ImageView)convertView;
         }
-        //To enable logging in Picasso
-        Picasso.with(mContext).setLoggingEnabled(true);
+        /*//To enable logging in Picasso
+        if(BuildConfig.DEBUG) {
+            Picasso.with(mContext).setLoggingEnabled(true);
+        }*/
 
         Picasso.with(mContext).load(mPosterArray[position]).into(imageView);
         return imageView;

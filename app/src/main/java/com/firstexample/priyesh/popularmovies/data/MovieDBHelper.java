@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import com.firstexample.priyesh.popularmovies.data.MovieContract.MovieEntry;
+import com.firstexample.priyesh.popularmovies.data.MovieContract.FavouriteEntry;
 
 /**
  * Created by PRIYESH on 29-07-2016.
@@ -23,7 +24,6 @@ public class MovieDBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        db.execSQL("DROP TABLE IF EXISTS " + MovieEntry.TABLE_NAME);
         final String SQL_CREATE_Movie_TABLE = "CREATE TABLE " + MovieEntry.TABLE_NAME +  " (" +
                 MovieEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 MovieEntry.COLUMN_MOVIE_ID + " TEXT NOT NULL, " +
@@ -33,12 +33,25 @@ public class MovieDBHelper extends SQLiteOpenHelper {
                 MovieEntry.COLUMN_ORIGINAL_TITLE + " TEXT NOT NULL, " +
                 MovieEntry.COLUMN_VOTE_AVERAGE + " TEXT NOT NULL " +
                 " );";
+
+        final String SQL_CREATE_FAVOURITE_MOVIE_TABLE = "CREATE TABLE " + FavouriteEntry.TABLE_NAME +  " (" +
+                FavouriteEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                FavouriteEntry.COLUMN_MOVIE_ID + " TEXT NOT NULL, " +
+                FavouriteEntry.COLUMN_POSTER_PATH + " TEXT NOT NULL, " +
+                FavouriteEntry.COLUMN_RELEASE_DATE + " TEXT NOT NULL, " +
+                FavouriteEntry.COLUMN_OVERVIEW + " TEXT NOT NULL, " +
+                FavouriteEntry.COLUMN_ORIGINAL_TITLE + " TEXT NOT NULL, " +
+                FavouriteEntry.COLUMN_VOTE_AVERAGE + " TEXT NOT NULL " +
+                " );";
+
         db.execSQL(SQL_CREATE_Movie_TABLE);
+        db.execSQL(SQL_CREATE_FAVOURITE_MOVIE_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + MovieEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + FavouriteEntry.TABLE_NAME);
         onCreate(db);
     }
 }

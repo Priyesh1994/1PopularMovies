@@ -8,4 +8,10 @@
     <string name="pref_sort_top_rated">top_rated</string>
     <string name="sort_title">Sort Order</string>
     <string name="sort_key">order</string>
+    <string name="add_to_favourites">Add to Favourites</string>
+    <string name="pref_sort_label_favourites">Favourites</string>
+    <string name="pref_sort_favourites">favourites</string>
+    <string name="isFavourite">Favourite</string>
+    <string name="isNoFavourite">No</string>
+    <string name="isYesFavourite">Yes</string>
 </resources>

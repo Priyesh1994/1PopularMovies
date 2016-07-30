@@ -19,6 +19,17 @@ public class MovieProvider extends ContentProvider{
     private MovieDBHelper mOpenHelper;
 
     static final int MOVIE = 100;
+    static final int FAVOURITE_MOVIE = 101;
+    static final int FAVOURITE_MOVIE_WITH_ID = 102;
+    static final int MOVIE_WITH_ID = 103;
+
+    private static final String sMovieFromID =
+            MovieContract.MovieEntry.TABLE_NAME + "." +
+                    MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ? ";
+
+    private static final String sFavouriteMovieFromID =
+            MovieContract.FavouriteEntry.TABLE_NAME + "." +
+                    MovieContract.FavouriteEntry.COLUMN_MOVIE_ID + " = ? ";
 
     @Override
     public boolean onCreate() {
@@ -44,6 +55,39 @@ public class MovieProvider extends ContentProvider{
                         sortOrder
                 );
                 break;
+            case FAVOURITE_MOVIE:
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        MovieContract.FavouriteEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            case FAVOURITE_MOVIE_WITH_ID:
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        MovieContract.FavouriteEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            case MOVIE_WITH_ID:
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        MovieContract.MovieEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown Uri:" +uri);
         }
@@ -59,6 +103,12 @@ public class MovieProvider extends ContentProvider{
         {
             case MOVIE:
                 return MovieContract.MovieEntry.CONTENT_TYPE;
+            case FAVOURITE_MOVIE:
+                return MovieContract.FavouriteEntry.CONTENT_TYPE;
+            case FAVOURITE_MOVIE_WITH_ID:
+                return MovieContract.FavouriteEntry.CONTENT_ITEM_TYPE;
+            case MOVIE_WITH_ID:
+                return MovieContract.MovieEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -80,9 +130,17 @@ public class MovieProvider extends ContentProvider{
                 else
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 break;
+            case FAVOURITE_MOVIE:
+                _id = db.insert(MovieContract.FavouriteEntry.TABLE_NAME, null, values);
+                if(_id > 0)
+                    returnUri = MovieContract.FavouriteEntry.buildFavouriteMovieUri(_id);
+                else
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
+        db.close();
         getContext().getContentResolver().notifyChange(uri, null);
         return returnUri;
     }
@@ -99,6 +157,9 @@ public class MovieProvider extends ContentProvider{
             case MOVIE:
                 rowsDeleted = db.delete(MovieContract.MovieEntry.TABLE_NAME,selection,selectionArgs);
                 break;
+            case FAVOURITE_MOVIE:
+                rowsDeleted = db.delete(MovieContract.FavouriteEntry.TABLE_NAME,selection,selectionArgs);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -107,7 +168,7 @@ public class MovieProvider extends ContentProvider{
         // Student: A null value deletes all rows.  In my implementation of this, I only notified
         // the uri listeners (using the content resolver) if the rowsDeleted != 0 or the selection
         // is null.
-
+        db.close();
         if(rowsDeleted != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
@@ -126,9 +187,13 @@ public class MovieProvider extends ContentProvider{
             case MOVIE:
                 rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME,values,selection,selectionArgs);
                 break;
+            case FAVOURITE_MOVIE:
+                rowsUpdated = db.update(MovieContract.FavouriteEntry.TABLE_NAME, values, selection, selectionArgs);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
+        db.close();
         // Oh, and you should notify the listeners here.
         if(rowsUpdated != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
@@ -168,6 +233,9 @@ public class MovieProvider extends ContentProvider{
         final String authority = MovieContract.CONTENT_AUTHORITY;
 
         matcher.addURI(authority,MovieContract.PATH_MOVIE,MOVIE);
+        matcher.addURI(authority,MovieContract.PATH_MOVIE + "?*",MOVIE_WITH_ID);
+        matcher.addURI(authority,MovieContract.PATH_FAVOURITE,FAVOURITE_MOVIE);
+        matcher.addURI(authority,MovieContract.PATH_FAVOURITE + "?*",FAVOURITE_MOVIE_WITH_ID);
         return matcher;
     }
 }

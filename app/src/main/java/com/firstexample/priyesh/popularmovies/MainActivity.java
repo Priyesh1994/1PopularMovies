@@ -45,60 +45,73 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateMovies() {
-        if(isOnline()) {
+        if(isOnline())
+        {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             first_sort_order = prefs.getString(getString(R.string.sort_key),
                     getString(R.string.pref_sort_popular));
-
-            Uri movieUri = MovieContract.MovieEntry.CONTENT_URI;
-            cur = getContentResolver().query(movieUri,null,null,null,null);
-            String[] posterArray = new String[cur.getCount()];
-            if(cur.moveToFirst())
+            GridView view = (GridView) findViewById(R.id.movies_grid);
+            if(!first_sort_order.equals(getString(R.string.pref_sort_favourites)))
             {
-                int i = 0;
-                do{
-                    posterArray[i] = cur.getString(cur.getColumnIndex(MovieContract.MovieEntry.COLUMN_POSTER_PATH));
-                    i++;
-                }while (cur.moveToNext());
+                Uri movieUri = MovieContract.MovieEntry.CONTENT_URI;
+                cur = getContentResolver().query(movieUri, null, null, null, null);
+                String[] posterArray = getCursorArray(cur);
+                if (cur.getCount() > 0) {
+                    view.setAdapter(new ImageAdapter(this, posterArray));
+                } else {
+                    FetchMovieTask fetchMovieTask = new FetchMovieTask(getApplicationContext(), MainActivity.this);
+                    fetchMovieTask.execute(first_sort_order);
+                }
             }
-
-            if(cur.getCount() > 0)
+            else
             {
-                GridView view = (GridView) findViewById(R.id.movies_grid);
-                view.setAdapter(new ImageAdapter(this,posterArray));
-                view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        cur.moveToPosition(position);
-                        Intent intent = new Intent(MainActivity.this,DetailActivity.class);
-                        Bundle bundle = new Bundle();
-
-                        //To pass the data to next activity
-                        bundle.putString(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE,
-                                cur.getString(cur.getColumnIndex(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE)));
-                        bundle.putString(MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
-                                cur.getString(cur.getColumnIndex(MovieContract.MovieEntry.COLUMN_RELEASE_DATE)));
-                        bundle.putString(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,
-                                cur.getString(cur.getColumnIndex(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE)));
-                        bundle.putString(MovieContract.MovieEntry.COLUMN_OVERVIEW,
-                                cur.getString(cur.getColumnIndex(MovieContract.MovieEntry.COLUMN_OVERVIEW)));
-                        bundle.putString(MovieContract.MovieEntry.COLUMN_POSTER_PATH,
-                                cur.getString(cur.getColumnIndex(MovieContract.MovieEntry.COLUMN_POSTER_PATH)));
-                        intent.putExtras(bundle);
-                        startActivity(intent);
+                Uri uri = MovieContract.FavouriteEntry.CONTENT_URI;
+                cur = getContentResolver().query(uri,null,null,null,null);
+                String[] posterArray = getCursorArray(cur);
+                view.setAdapter(new ImageAdapter(this, posterArray));
+            }
+            view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    cur.moveToPosition(position);
+                    Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+                    Bundle bundle = new Bundle();
+                    if(!first_sort_order.equals(getString(R.string.pref_sort_favourites)))
+                    {
+                        bundle.putString(MovieContract.MovieEntry.COLUMN_MOVIE_ID,
+                                cur.getString(cur.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_ID)));
+                        bundle.putString(getString(R.string.isFavourite),
+                                getString(R.string.isNoFavourite));
                     }
-                });
-            }
-            else {
-                FetchMovieTask fetchMovieTask = new FetchMovieTask(getApplicationContext(), MainActivity.this);
-                fetchMovieTask.execute(first_sort_order);
-            }
+                    else
+                    {
+                        bundle.putString(MovieContract.FavouriteEntry.COLUMN_MOVIE_ID,
+                                cur.getString(cur.getColumnIndex(MovieContract.FavouriteEntry.COLUMN_MOVIE_ID)));
+                        bundle.putString(getString(R.string.isFavourite),
+                                getString(R.string.isYesFavourite));
+                    }
+                    intent.putExtras(bundle);
+                    startActivity(intent);
+                }
+            });
         }
         else
         {
             Toast.makeText(this,"Network Issue",Toast.LENGTH_SHORT).show();
             Log.v(LOG_TAG,"Network error");
         }
+    }
+
+    private String[] getCursorArray(Cursor cur) {
+        String[] posterArray = new String[cur.getCount()];
+        if (cur.moveToFirst()) {
+            int i = 0;
+            do {
+                posterArray[i] = cur.getString(cur.getColumnIndex(MovieContract.MovieEntry.COLUMN_POSTER_PATH));
+                i++;
+            } while (cur.moveToNext());
+        }
+        return posterArray;
     }
 
 
@@ -110,9 +123,11 @@ public class MainActivity extends AppCompatActivity {
             //will check whether the preference has changed or not
             if (!first_sort_order.equals(prefs.getString(getString(R.string.sort_key),
                     getString(R.string.pref_sort_popular)))) {
-                int rowsDeleted = 0;
-                rowsDeleted = getContentResolver().delete(MovieContract.MovieEntry.CONTENT_URI, null, null);
-                Log.v(LOG_TAG + "Rows Deleted:",rowsDeleted + "");
+                if(!first_sort_order.equals(getString(R.string.pref_sort_favourites))) {
+                    int rowsDeleted = 0;
+                    rowsDeleted = getContentResolver().delete(MovieContract.MovieEntry.CONTENT_URI, null, null);
+                    Log.v(LOG_TAG + "Rows Deleted:", rowsDeleted + "");
+                }
                 updateMovies();
             }
         }

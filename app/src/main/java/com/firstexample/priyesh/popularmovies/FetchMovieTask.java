@@ -23,9 +23,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Vector;
 
 /**
@@ -33,6 +30,8 @@ import java.util.Vector;
  */
 public class FetchMovieTask extends AsyncTask<String,Void,String> {
 
+    //Reason of not using MovieEntry here is because this String are there to retrieve data from cloud.
+    //The retrieved JSON may have different key name than with the fields of the table.
     final String MOVIE_ID = "id";
     final String POSTER_PATH = "poster_path";
     final String RELEASE_DATE = "release_date";
@@ -44,7 +43,7 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
 
     private static final String LOG_TAG = FetchMovieTask.class.getSimpleName();
 
-    private String overview,release_date,vote_average,original_title,moviePoster,movie_id;
+    private String movie_id;
 
     private final Context mContext;
 
@@ -59,11 +58,9 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
     protected void onPostExecute(final String movieString) {
         GridView view = (GridView) mainActivity.findViewById(R.id.movies_grid);
         String[] posterArray = new String[0];
-        JSONObject posterJSON = null;
         try {
             posterArray = getDataFromJSON(movieString);
-
-            posterJSON = new JSONObject(movieString);
+            JSONObject posterJSON = new JSONObject(movieString);
             JSONArray movieArray = posterJSON.getJSONArray(RESULT_STRING);
             Vector<ContentValues> cVVector = new Vector<ContentValues>(movieArray.length());
 
@@ -73,19 +70,17 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
 
                 //To retrieve details of the selected movie
                 movie_id = movieDetails.getString(MOVIE_ID);
-                moviePoster = movieDetails.getString(POSTER_PATH);
-                release_date = movieDetails.getString(RELEASE_DATE);
-                overview = movieDetails.getString(OVERVIEW);
-                original_title = movieDetails.getString(ORIGINAL_TITLE);
-                vote_average = movieDetails.getString(VOTE_AVERAGE);
+                String moviePoster = movieDetails.getString(POSTER_PATH);
+                String release_date = movieDetails.getString(RELEASE_DATE);
+                String overview = movieDetails.getString(OVERVIEW);
+                String original_title = movieDetails.getString(ORIGINAL_TITLE);
+                String vote_average = movieDetails.getString(VOTE_AVERAGE);
                 moviePoster = BASE_URL + moviePoster;
-
-                String formatted_release_date = formatDate(release_date);
 
                 ContentValues movieValues = new ContentValues();
                 movieValues.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID,movie_id);
                 movieValues.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH,moviePoster);
-                movieValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE,formatted_release_date);
+                movieValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE,release_date);
                 movieValues.put(MovieContract.MovieEntry.COLUMN_OVERVIEW,overview);
                 movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE,original_title);
                 movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,vote_average);
@@ -112,13 +107,21 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
             {
                 Intent intent = new Intent(mContext,DetailActivity.class);
                 Bundle bundle = new Bundle();
+                JSONObject posterJSON = null;
+                try {
+                    posterJSON = new JSONObject(movieString);
+                    JSONArray movieArray = posterJSON.getJSONArray(RESULT_STRING);
+                    JSONObject movieDetails = movieArray.getJSONObject(position);
 
+                    //To retrieve id of the selected movie
+                    movie_id = movieDetails.getString(MOVIE_ID);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 //To pass the data to next activity
-                bundle.putString(ORIGINAL_TITLE,original_title);
-                bundle.putString(RELEASE_DATE,release_date);
-                bundle.putString(VOTE_AVERAGE,vote_average);
-                bundle.putString(OVERVIEW,overview);
-                bundle.putString(POSTER_PATH,moviePoster);
+                bundle.putString(MovieContract.MovieEntry.COLUMN_MOVIE_ID,movie_id);
+                bundle.putString(mContext.getString(R.string.isFavourite),
+                        mContext.getString(R.string.isNoFavourite));
                 intent.putExtras(bundle);
                 mainActivity.startActivity(intent);
             }
@@ -126,19 +129,6 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
 
     }
 
-    private String formatDate(String release_date){
-        //String someDate = "1995-01-01";
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date date = null;
-        try {
-            date = sdf.parse(release_date);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        release_date = date.getTime() + "";
-        Log.v("Date format:", release_date);
-        return release_date;
-    }
 
     @Override
     protected String doInBackground(String... params) {

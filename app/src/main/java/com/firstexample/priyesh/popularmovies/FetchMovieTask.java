@@ -94,12 +94,8 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
             }
 
             int rowsInserted = 0;
-            int rowsDeleted = 0;
             if(cVVector.size() > 0)
             {
-                //rowsDeleted = mContext.getContentResolver().delete(MovieContract.MovieEntry.CONTENT_URI, null, null);
-                //Log.v(LOG_TAG + "Rows Deleted:",rowsDeleted + "");
-
                 ContentValues[] cvArray = new ContentValues[cVVector.size()];
                 cVVector.toArray(cvArray);
                 rowsInserted = mContext.getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);

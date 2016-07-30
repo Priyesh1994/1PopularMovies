@@ -59,7 +59,6 @@ public class ImageAdapter extends BaseAdapter {
         if(BuildConfig.DEBUG) {
             Picasso.with(mContext).setLoggingEnabled(true);
         }*/
-
         Picasso.with(mContext).load(mPosterArray[position]).into(imageView);
         return imageView;
     }

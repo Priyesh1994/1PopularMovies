@@ -3,8 +3,7 @@ package com.firstexample.priyesh.popularmovies.data;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import com.firstexample.priyesh.popularmovies.data.MovieContract.MovieEntry;
-import com.firstexample.priyesh.popularmovies.data.MovieContract.FavouriteEntry;
+import com.firstexample.priyesh.popularmovies.data.MovieContract.*;
 
 /**
  * Created by PRIYESH on 29-07-2016.
@@ -44,14 +43,35 @@ public class MovieDBHelper extends SQLiteOpenHelper {
                 FavouriteEntry.COLUMN_VOTE_AVERAGE + " TEXT NOT NULL " +
                 " );";
 
+        final String SQL_CREATE_VIDEO_TABLE = "CREATE TABLE " + VideoEntry.TABLE_NAME +  " (" +
+                VideoEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                VideoEntry.COLUMN_MOVIE_ID + " TEXT NOT NULL, " +
+                VideoEntry.COLUMN_VIDEO_ID + " TEXT NOT NULL, " +
+                VideoEntry.COLUMN_VIDEO_NAME + " TEXT NOT NULL, " +
+                VideoEntry.COLUMN_VIDEO_KEY + " TEXT NOT NULL, " +
+                VideoEntry.COLUMN_VIDEO_TYPE + " TEXT NOT NULL " +
+                " );";
+
+        final String SQL_CREATE_REVIEW_TABLE = "CREATE TABLE " + ReviewEntry.TABLE_NAME +  " (" +
+                ReviewEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                ReviewEntry.COLUMN_MOVIE_ID + " TEXT NOT NULL, " +
+                ReviewEntry.COLUMN_REVIEW_ID + " TEXT NOT NULL, " +
+                ReviewEntry.COLUMN_CONTENT + " TEXT NOT NULL, " +
+                ReviewEntry.COLUMN_AUTHOR + " TEXT NOT NULL " +
+                " );";
+
         db.execSQL(SQL_CREATE_Movie_TABLE);
         db.execSQL(SQL_CREATE_FAVOURITE_MOVIE_TABLE);
+        db.execSQL(SQL_CREATE_VIDEO_TABLE);
+        db.execSQL(SQL_CREATE_REVIEW_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + MovieEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + FavouriteEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + VideoEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + ReviewEntry.TABLE_NAME);
         onCreate(db);
     }
 }

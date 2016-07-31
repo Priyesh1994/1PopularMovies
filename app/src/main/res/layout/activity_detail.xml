@@ -47,6 +47,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/movie_synopsis"/>
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/listView_youtube_videos">
+        </ListView>
     </LinearLayout>
 
 </ScrollView>

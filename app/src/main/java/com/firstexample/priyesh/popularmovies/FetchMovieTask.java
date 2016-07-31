@@ -44,6 +44,7 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
     private static final String LOG_TAG = FetchMovieTask.class.getSimpleName();
 
     private String movie_id;
+    private String[] movie_id_for_video;
 
     private final Context mContext;
 
@@ -63,6 +64,7 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
             JSONObject posterJSON = new JSONObject(movieString);
             JSONArray movieArray = posterJSON.getJSONArray(RESULT_STRING);
             Vector<ContentValues> cVVector = new Vector<ContentValues>(movieArray.length());
+            //movie_id_for_video = new String[movieArray.length()];
 
             for(int position = 0; position < movieArray.length(); position++)
             {
@@ -70,6 +72,7 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
 
                 //To retrieve details of the selected movie
                 movie_id = movieDetails.getString(MOVIE_ID);
+                //movie_id_for_video[position] = movie_id;
                 String moviePoster = movieDetails.getString(POSTER_PATH);
                 String release_date = movieDetails.getString(RELEASE_DATE);
                 String overview = movieDetails.getString(OVERVIEW);
@@ -94,7 +97,7 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
                 ContentValues[] cvArray = new ContentValues[cVVector.size()];
                 cVVector.toArray(cvArray);
                 rowsInserted = mContext.getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);
-                Log.v(LOG_TAG + "Rows Inserted:",rowsInserted + "");
+
             }
         } catch (JSONException e) {
             e.printStackTrace();

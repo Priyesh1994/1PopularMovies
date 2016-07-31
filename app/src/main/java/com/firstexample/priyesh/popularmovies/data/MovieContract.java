@@ -17,6 +17,8 @@ public class MovieContract {
 
     public static final String PATH_MOVIE = "movies";
     public static final String PATH_FAVOURITE = "favourites";
+    public static final String PATH_VIDEO = "videos";
+    public static final String PATH_REVIEW = "reviews";
 
     //By default, BaseColumns will create _id as a primary key
     public static final class MovieEntry implements BaseColumns{
@@ -75,6 +77,53 @@ public class MovieContract {
         public static Uri buildFavouriteMovieUriFromId(String id)
         {
             return CONTENT_URI.buildUpon().appendQueryParameter(COLUMN_MOVIE_ID,id).build();
+        }
+    }
+
+    public static class VideoEntry implements BaseColumns
+    {
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_VIDEO).build();
+
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_VIDEO;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_VIDEO;
+
+        public static final String TABLE_NAME = "video";
+
+        public static final String COLUMN_MOVIE_ID = "movie_id";
+        public static final String COLUMN_VIDEO_ID = "video_id";
+        public static final String COLUMN_VIDEO_KEY = "key";
+        public static final String COLUMN_VIDEO_TYPE = "type";
+        public static final String COLUMN_VIDEO_NAME = "name";
+
+        public static Uri buildVideoUri(long id)
+        {
+            return ContentUris.withAppendedId(CONTENT_URI,id);
+        }
+    }
+
+    public static class ReviewEntry implements BaseColumns
+    {
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_REVIEW).build();
+
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_REVIEW;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_REVIEW;
+
+        public static final String TABLE_NAME = "review";
+
+        public static final String COLUMN_MOVIE_ID = "movie_id";
+        public static final String COLUMN_REVIEW_ID = "review_id";
+        public static final String COLUMN_AUTHOR = "author";
+        public static final String COLUMN_CONTENT = "content";
+
+        public static Uri buildReviewUri(long id)
+        {
+            return ContentUris.withAppendedId(CONTENT_URI,id);
         }
     }
 }

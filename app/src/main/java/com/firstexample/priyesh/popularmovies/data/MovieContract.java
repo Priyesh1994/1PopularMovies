@@ -102,6 +102,11 @@ public class MovieContract {
         {
             return ContentUris.withAppendedId(CONTENT_URI,id);
         }
+
+        public static Uri buildVideoUriFromId(String id)
+        {
+            return CONTENT_URI.buildUpon().appendQueryParameter(COLUMN_MOVIE_ID,id).build();
+        }
     }
 
     public static class ReviewEntry implements BaseColumns
@@ -124,6 +129,11 @@ public class MovieContract {
         public static Uri buildReviewUri(long id)
         {
             return ContentUris.withAppendedId(CONTENT_URI,id);
+        }
+
+        public static Uri buildReviewUriFromId(String id)
+        {
+            return CONTENT_URI.buildUpon().appendQueryParameter(COLUMN_MOVIE_ID,id).build();
         }
     }
 }

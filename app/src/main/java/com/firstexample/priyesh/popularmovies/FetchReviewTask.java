@@ -106,7 +106,7 @@ public class FetchReviewTask extends AsyncTask<String,Void,String> {
                 ContentValues reviewValues = new ContentValues();
                 reviewValues.put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID,movieId);
                 reviewValues.put(MovieContract.ReviewEntry.COLUMN_REVIEW_ID,reviewObject.getString("id"));
-                reviewValues.put(MovieContract.ReviewEntry.COLUMN_AUTHOR,reviewObject.getString("content"));
+                reviewValues.put(MovieContract.ReviewEntry.COLUMN_CONTENT,reviewObject.getString("content"));
                 reviewValues.put(MovieContract.ReviewEntry.COLUMN_AUTHOR,reviewObject.getString("author"));
                 cVVector.add(reviewValues);
             }

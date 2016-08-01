@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -18,13 +17,12 @@ import android.widget.Toast;
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
-
 public class DetailActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = DetailActivity.class.getSimpleName();
     private ListView mListViewForVideos;
-    ArrayAdapter<String> mVideoAdapter;
+    private VideoAdapter mVideoAdapter;
+    //ArrayAdapter<String> mVideoAdapter;
     Button btn;
     String movie_id = null;
     String original_title = null;
@@ -41,9 +39,9 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         btn = (Button) findViewById(R.id.movie_favourite_button);
-        mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
+       /* mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
         mVideoAdapter = new ArrayAdapter<>
-                (this,R.layout.list_item_video,R.id.list_text_video,new ArrayList<String>());
+                (this,R.layout.list_item_video,R.id.list_text_video,new ArrayList<String>());*/
 
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
@@ -74,12 +72,6 @@ public class DetailActivity extends AppCompatActivity {
                         new String[]{movie_id},
                         null);
             }
-
-            FetchVideoTask fetchVideoTask = new FetchVideoTask(this);
-            fetchVideoTask.execute(movie_id);
-            FetchReviewTask fetchReviewTask = new FetchReviewTask(this);
-            fetchReviewTask.execute(movie_id);
-
             //As column name of both tables are same, we can go with same cursor
             if(cursor.moveToFirst())
             {
@@ -99,6 +91,33 @@ public class DetailActivity extends AppCompatActivity {
 
         movie_poster = (ImageView) findViewById(R.id.movie_poster);
         Picasso.with(this).load(poster_path).into(movie_poster);
+
+        Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
+        Cursor videoCursor = getContentResolver().query(videoUri,
+                null,
+                MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
+                new String[]{movie_id},
+                null);
+        if(videoCursor.getCount() == 0 )
+        {
+            FetchVideoTask fetchVideoTask = new FetchVideoTask(this);
+            fetchVideoTask.execute(movie_id);
+        }
+        mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
+        mVideoAdapter = new VideoAdapter(this,videoCursor,0);
+        mListViewForVideos.setAdapter(mVideoAdapter);
+//
+//        Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
+//        Cursor reviewCursor = getContentResolver().query(reviewUri,
+//                null,
+//                MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ? ",
+//                new String[]{movie_id},
+//                null);
+//        if (reviewCursor.getCount() == 0 )
+//        {
+//        FetchReviewTask fetchReviewTask = new FetchReviewTask(this);
+//        fetchReviewTask.execute(movie_id);
+//        }
     }
 
     public void onAddToFavourites(View view) {

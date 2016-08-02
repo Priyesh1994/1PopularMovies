@@ -122,5 +122,9 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        //HOw can I get the cursor here
+        /*ListView mListViewForVideos = (ListView) mContext.findViewById(R.id.listView_youtube_videos);
+        VideoAdapter mVideoAdapter = new VideoAdapter(this, videoCursor, 0);
+        mListViewForVideos.setAdapter(mVideoAdapter);*/
     }
 }

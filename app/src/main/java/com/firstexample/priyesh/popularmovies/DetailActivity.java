@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -17,12 +18,11 @@ import android.widget.Toast;
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
+import java.util.concurrent.ExecutionException;
+
 public class DetailActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = DetailActivity.class.getSimpleName();
-    private ListView mListViewForVideos;
-    private VideoAdapter mVideoAdapter;
-    //ArrayAdapter<String> mVideoAdapter;
     Button btn;
     String movie_id = null;
     String original_title = null;
@@ -39,9 +39,6 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         btn = (Button) findViewById(R.id.movie_favourite_button);
-       /* mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
-        mVideoAdapter = new ArrayAdapter<>
-                (this,R.layout.list_item_video,R.id.list_text_video,new ArrayList<String>());*/
 
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
@@ -92,8 +89,9 @@ public class DetailActivity extends AppCompatActivity {
         movie_poster = (ImageView) findViewById(R.id.movie_poster);
         Picasso.with(this).load(poster_path).into(movie_poster);
 
+        //Get Video Details
         Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
-        Cursor videoCursor = getContentResolver().query(videoUri,
+        final Cursor videoCursor = getContentResolver().query(videoUri,
                 null,
                 MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
                 new String[]{movie_id},
@@ -103,21 +101,36 @@ public class DetailActivity extends AppCompatActivity {
             FetchVideoTask fetchVideoTask = new FetchVideoTask(this);
             fetchVideoTask.execute(movie_id);
         }
-        mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
-        mVideoAdapter = new VideoAdapter(this,videoCursor,0);
+        ListView mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
+        VideoAdapter mVideoAdapter = new VideoAdapter(this, videoCursor, 0);
         mListViewForVideos.setAdapter(mVideoAdapter);
-//
-//        Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
-//        Cursor reviewCursor = getContentResolver().query(reviewUri,
-//                null,
-//                MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ? ",
-//                new String[]{movie_id},
-//                null);
-//        if (reviewCursor.getCount() == 0 )
-//        {
-//        FetchReviewTask fetchReviewTask = new FetchReviewTask(this);
-//        fetchReviewTask.execute(movie_id);
-//        }
+        mListViewForVideos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                videoCursor.moveToPosition(position);
+                String key = videoCursor.getString(videoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
+            }
+        });
+
+        //Get Review Details
+        Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
+        Cursor reviewCursor = getContentResolver().query(reviewUri,
+                null,
+                MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ? ",
+                new String[]{movie_id},
+                null);
+        if (reviewCursor.getCount() == 0 )
+        {
+        FetchReviewTask fetchReviewTask = new FetchReviewTask(this);
+            try {
+                fetchReviewTask.execute(movie_id).get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        ListView mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
+        ReviewAdapter reviewAdapter = new ReviewAdapter(this, reviewCursor, 0);
+        mListViewForReviews.setAdapter(reviewAdapter);
     }
 
     public void onAddToFavourites(View view) {

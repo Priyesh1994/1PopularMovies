@@ -44,8 +44,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        getSupportLoaderManager().initLoader(VIDEO_LOADER, null, this);
-
         btn = (Button) findViewById(R.id.movie_favourite_button);
 
         Intent intent = getIntent();
@@ -108,6 +106,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         {
             FetchVideoTask fetchVideoTask = new FetchVideoTask(this);
             fetchVideoTask.execute(movie_id);
+            getSupportLoaderManager().restartLoader(0, null, this);
         }
         mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
         mVideoAdapter = new VideoAdapter(this, videoCursor, 0);
@@ -138,6 +137,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         ListView mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
         ReviewAdapter reviewAdapter = new ReviewAdapter(this, reviewCursor, 0);
         mListViewForReviews.setAdapter(reviewAdapter);
+
+        getSupportLoaderManager().initLoader(VIDEO_LOADER, null, this);
+
     }
 
     public void onAddToFavourites(View view) {
@@ -172,9 +174,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        movie_id = bundle.getString(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
+//        Intent intent = getIntent();
+//        Bundle bundle = intent.getExtras();
+//        movie_id = bundle.getString(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
         Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
 
         return new CursorLoader(this,
@@ -187,7 +189,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mVideoAdapter = new VideoAdapter(this, data, 0);
+        //mVideoAdapter = new VideoAdapter(this, data, 0);
         mVideoAdapter.swapCursor(data);
         //mListViewForVideos.setAdapter(mVideoAdapter);
     }

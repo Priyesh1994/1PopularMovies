@@ -5,10 +5,12 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -18,13 +20,14 @@ import android.widget.Toast;
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
-import java.util.concurrent.ExecutionException;
-
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private static final String LOG_TAG = DetailActivity.class.getSimpleName();
+
+    private static final int VIDEO_LOADER = 0;
+
     Button btn;
-    String movie_id = null;
+    private static String movie_id;
     String original_title = null;
     String overview = null;
     String release_date = null;
@@ -33,11 +36,16 @@ public class DetailActivity extends AppCompatActivity {
     String isFavourite = null;
 
     ImageView movie_poster;
+    private VideoAdapter mVideoAdapter;
+    private ListView mListViewForVideos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        getSupportLoaderManager().initLoader(VIDEO_LOADER, null, this);
+
         btn = (Button) findViewById(R.id.movie_favourite_button);
 
         Intent intent = getIntent();
@@ -101,7 +109,10 @@ public class DetailActivity extends AppCompatActivity {
             FetchVideoTask fetchVideoTask = new FetchVideoTask(this);
             fetchVideoTask.execute(movie_id);
         }
-        ListView mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
+        mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
+        mVideoAdapter = new VideoAdapter(this, videoCursor, 0);
+        mListViewForVideos.setAdapter(mVideoAdapter);
+        /*ListView mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
         VideoAdapter mVideoAdapter = new VideoAdapter(this, videoCursor, 0);
         mListViewForVideos.setAdapter(mVideoAdapter);
         mListViewForVideos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -110,7 +121,7 @@ public class DetailActivity extends AppCompatActivity {
                 videoCursor.moveToPosition(position);
                 String key = videoCursor.getString(videoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
             }
-        });
+        });*/
 
         //Get Review Details
         Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
@@ -121,12 +132,8 @@ public class DetailActivity extends AppCompatActivity {
                 null);
         if (reviewCursor.getCount() == 0 )
         {
-        FetchReviewTask fetchReviewTask = new FetchReviewTask(this);
-            try {
-                fetchReviewTask.execute(movie_id).get();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
+            FetchReviewTask fetchReviewTask = new FetchReviewTask(this);
+            fetchReviewTask.execute(movie_id);
         }
         ListView mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
         ReviewAdapter reviewAdapter = new ReviewAdapter(this, reviewCursor, 0);
@@ -161,5 +168,32 @@ public class DetailActivity extends AppCompatActivity {
         {
             Toast.makeText(this,"Movie already added to favourites",Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Intent intent = getIntent();
+        Bundle bundle = intent.getExtras();
+        movie_id = bundle.getString(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
+        Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
+
+        return new CursorLoader(this,
+                videoUri,
+                null,
+                MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
+                new String[]{movie_id},
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mVideoAdapter = new VideoAdapter(this, data, 0);
+        mVideoAdapter.swapCursor(data);
+        //mListViewForVideos.setAdapter(mVideoAdapter);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mVideoAdapter.swapCursor(null);
     }
 }

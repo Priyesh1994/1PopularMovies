@@ -2,6 +2,7 @@ package com.firstexample.priyesh.popularmovies;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,11 +11,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
+import com.squareup.picasso.Picasso;
 
 /**
  * Created by PRIYESH on 01-08-2016.
  */
 public class VideoAdapter extends CursorAdapter {
+
+    final String BASE_URI = "http://img.youtube.com/vi/";
+    final String IMG_PATH = "0.jpg";
 
     public VideoAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
@@ -44,6 +49,13 @@ public class VideoAdapter extends CursorAdapter {
         ViewHolder viewHolder = (ViewHolder)view.getTag();
 
         String videoName = cursor.getString(cursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_NAME));
+        String key = cursor.getString(cursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
+
+        Uri builtThumbUri = Uri.parse(BASE_URI).buildUpon()
+                .appendPath(key)
+                .appendPath(IMG_PATH)
+                .build();
+        Picasso.with(context).load(builtThumbUri).into(viewHolder.iconView);
         viewHolder.nameView.setText(videoName);
     }
 }

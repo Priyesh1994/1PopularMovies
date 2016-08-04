@@ -1,5 +1,6 @@
 package com.firstexample.priyesh.popularmovies;
 
+import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -11,6 +12,7 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -25,19 +27,18 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private static final String LOG_TAG = DetailActivity.class.getSimpleName();
 
     private static final int VIDEO_LOADER = 0;
+    private static final int REVIEW_LOADER = 1;
+    private Cursor mVideoCursor;
 
     Button btn;
     private static String movie_id;
-    String original_title = null;
-    String overview = null;
-    String release_date = null;
-    String vote_average = null;
-    String poster_path = null;
-    String isFavourite = null;
+    String original_title = null, overview = null, release_date = null, vote_average = null, poster_path = null, isFavourite = null;
 
     ImageView movie_poster;
     private VideoAdapter mVideoAdapter;
+    private ReviewAdapter mReviewAdapter;
     private ListView mListViewForVideos;
+    private ListView mListViewForReviews;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,30 +98,40 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         //Get Video Details
         Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
-        final Cursor videoCursor = getContentResolver().query(videoUri,
+        mVideoCursor = getContentResolver().query(videoUri,
                 null,
                 MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
                 new String[]{movie_id},
                 null);
-        if(videoCursor.getCount() == 0 )
+        mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
+        mVideoAdapter = new VideoAdapter(this, mVideoCursor, 0);
+        mListViewForVideos.setAdapter(mVideoAdapter);
+        if (mVideoCursor.getCount() == 0)
         {
             FetchVideoTask fetchVideoTask = new FetchVideoTask(this);
             fetchVideoTask.execute(movie_id);
-            getSupportLoaderManager().restartLoader(0, null, this);
         }
-        mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
-        mVideoAdapter = new VideoAdapter(this, videoCursor, 0);
-        mListViewForVideos.setAdapter(mVideoAdapter);
-        /*ListView mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
-        VideoAdapter mVideoAdapter = new VideoAdapter(this, videoCursor, 0);
-        mListViewForVideos.setAdapter(mVideoAdapter);
+//        else
+//        {
+//            Utility.setDynamicHeight(mListViewForVideos);
+//        }
+
+
         mListViewForVideos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                videoCursor.moveToPosition(position);
-                String key = videoCursor.getString(videoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
+                mVideoCursor.moveToPosition(position);
+                String key = mVideoCursor.getString(mVideoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + key));
+                    startActivity(intent);
+                }catch (ActivityNotFoundException ex) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("http://www.youtube.com/watch?v=" + key));
+                    startActivity(intent);
+                }
             }
-        });*/
+        });
 
         //Get Review Details
         Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
@@ -129,17 +140,18 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ? ",
                 new String[]{movie_id},
                 null);
-        if (reviewCursor.getCount() == 0 )
-        {
+        if (reviewCursor.getCount() == 0) {
             FetchReviewTask fetchReviewTask = new FetchReviewTask(this);
             fetchReviewTask.execute(movie_id);
         }
-        ListView mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
-        ReviewAdapter reviewAdapter = new ReviewAdapter(this, reviewCursor, 0);
-        mListViewForReviews.setAdapter(reviewAdapter);
+        mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
+        mReviewAdapter = new ReviewAdapter(this, reviewCursor, 0);
+        mListViewForReviews.setAdapter(mReviewAdapter);
 
         getSupportLoaderManager().initLoader(VIDEO_LOADER, null, this);
+        getSupportLoaderManager().initLoader(REVIEW_LOADER, null, this);
 
+        //Utility.setDynamicHeight(mListViewForReviews);
     }
 
     public void onAddToFavourites(View view) {
@@ -174,28 +186,58 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-//        Intent intent = getIntent();
-//        Bundle bundle = intent.getExtras();
-//        movie_id = bundle.getString(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
-        Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
 
-        return new CursorLoader(this,
-                videoUri,
-                null,
-                MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
-                new String[]{movie_id},
-                null);
+        switch (id)
+        {
+            case VIDEO_LOADER:
+                Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
+
+                return new CursorLoader(this,
+                        videoUri,
+                        null,
+                        MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
+                        new String[]{movie_id},
+                        null);
+
+            case REVIEW_LOADER:
+                Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
+
+                return new CursorLoader(this,
+                        reviewUri,
+                        null,
+                        MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ? ",
+                        new String[]{movie_id},
+                        null);
+            default:
+                return null;
+        }
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        //mVideoAdapter = new VideoAdapter(this, data, 0);
-        mVideoAdapter.swapCursor(data);
-        //mListViewForVideos.setAdapter(mVideoAdapter);
+        switch (loader.getId())
+        {
+            case VIDEO_LOADER:
+                mVideoAdapter.swapCursor(data);
+                break;
+            case REVIEW_LOADER:
+                mReviewAdapter.swapCursor(data);
+                break;
+        }
+        Utility.setDynamicHeight(mListViewForVideos);
+        Utility.setDynamicHeight(mListViewForReviews);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        mVideoAdapter.swapCursor(null);
+        switch (loader.getId())
+        {
+            case VIDEO_LOADER:
+                mVideoAdapter.swapCursor(null);
+                break;
+            case REVIEW_LOADER:
+                mReviewAdapter.swapCursor(null);
+                break;
+        }
     }
 }

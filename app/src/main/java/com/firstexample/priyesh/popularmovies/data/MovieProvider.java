@@ -139,6 +139,7 @@ public class MovieProvider extends ContentProvider{
             default:
                 throw new UnsupportedOperationException("Unknown Uri:" +uri);
         }
+        retCursor.setNotificationUri(getContext().getContentResolver(),uri);
         return retCursor;
     }
 

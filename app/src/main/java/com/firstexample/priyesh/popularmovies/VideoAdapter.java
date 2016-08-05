@@ -49,6 +49,7 @@ public class VideoAdapter extends CursorAdapter {
         ViewHolder viewHolder = (ViewHolder)view.getTag();
 
         String videoName = cursor.getString(cursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_NAME));
+        viewHolder.nameView.setText(videoName);
         String key = cursor.getString(cursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
 
         Uri builtThumbUri = Uri.parse(BASE_URI).buildUpon()
@@ -56,6 +57,5 @@ public class VideoAdapter extends CursorAdapter {
                 .appendPath(IMG_PATH)
                 .build();
         Picasso.with(context).load(builtThumbUri).into(viewHolder.iconView);
-        viewHolder.nameView.setText(videoName);
     }
 }

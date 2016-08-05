@@ -1,20 +1,17 @@
 package com.firstexample.priyesh.popularmovies;
 
-import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,13 +19,20 @@ import android.widget.Toast;
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
-public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.concurrent.ExecutionException;
+//implements LoaderManager.LoaderCallbacks<Cursor>
+public class DetailActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = DetailActivity.class.getSimpleName();
 
     private static final int VIDEO_LOADER = 0;
     private static final int REVIEW_LOADER = 1;
     private Cursor mVideoCursor;
+    private LinearLayout mLinearLayout;
 
     Button btn;
     private static String movie_id;
@@ -39,11 +43,14 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private ReviewAdapter mReviewAdapter;
     private ListView mListViewForVideos;
     private ListView mListViewForReviews;
+    private String movieString;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        mLinearLayout = (LinearLayout) findViewById(R.id.detail_layout);
 
         btn = (Button) findViewById(R.id.movie_favourite_button);
 
@@ -97,7 +104,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         Picasso.with(this).load(poster_path).into(movie_poster);
 
         //Get Video Details
-        Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
+        /*Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
         mVideoCursor = getContentResolver().query(videoUri,
                 null,
                 MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
@@ -105,19 +112,37 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 null);
         mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
         mVideoAdapter = new VideoAdapter(this, mVideoCursor, 0);
-        mListViewForVideos.setAdapter(mVideoAdapter);
-        if (mVideoCursor.getCount() == 0)
+        mListViewForVideos.setAdapter(mVideoAdapter);*/
+        /*if (mVideoCursor.getCount() == 0)
         {
-            FetchVideoTask fetchVideoTask = new FetchVideoTask(this);
-            fetchVideoTask.execute(movie_id);
-        }
+            */
+        FetchVideoTask fetchVideoTask = new FetchVideoTask(this);
+            try {
+                movieString = fetchVideoTask.execute(movie_id).get();
+                JSONObject object = new JSONObject(movieString);
+                JSONArray resultsArray = object.getJSONArray("results");
+                for (int position = 0; position < resultsArray.length(); position++)
+                {
+                    View videoItem = LayoutInflater.from(this).inflate(R.layout.video_item,null);
+                    JSONObject videoObject = resultsArray.getJSONObject(position);
+                    String key = videoObject.getString("key");
+                    String name = videoObject.getString("name");
+                    ((TextView)videoItem.findViewById(R.id.list_text_video)).setText(name);
+                    mLinearLayout.addView(videoItem);
+                    //this.addContentView(videoItem,);
+                }
+
+            } catch (InterruptedException | ExecutionException | JSONException e) {
+                e.printStackTrace();
+            }
+        //}
 //        else
 //        {
 //            Utility.setDynamicHeight(mListViewForVideos);
 //        }
 
 
-        mListViewForVideos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        /*mListViewForVideos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 mVideoCursor.moveToPosition(position);
@@ -131,25 +156,44 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                     startActivity(intent);
                 }
             }
-        });
+        });*/
 
         //Get Review Details
-        Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
+        /*Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
         Cursor reviewCursor = getContentResolver().query(reviewUri,
                 null,
                 MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ? ",
                 new String[]{movie_id},
                 null);
-        if (reviewCursor.getCount() == 0) {
+        if (reviewCursor.getCount() == 0) {*/
             FetchReviewTask fetchReviewTask = new FetchReviewTask(this);
-            fetchReviewTask.execute(movie_id);
-        }
-        mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
-        mReviewAdapter = new ReviewAdapter(this, reviewCursor, 0);
-        mListViewForReviews.setAdapter(mReviewAdapter);
+            try {
+                String reviewString = fetchReviewTask.execute(movie_id).get();
+                JSONObject object = new JSONObject(reviewString);
+                String movieId = object.getString("id");
+                JSONArray resultsArray = object.getJSONArray("results");
 
-        getSupportLoaderManager().initLoader(VIDEO_LOADER, null, this);
-        getSupportLoaderManager().initLoader(REVIEW_LOADER, null, this);
+                for (int position = 0; position < resultsArray.length(); position++)
+                {
+                    View reviewItem = LayoutInflater.from(this).inflate(R.layout.review_item,null);
+                    JSONObject reviewObject = resultsArray.getJSONObject(position);
+                    String content = reviewObject.getString("content");
+                    String author = reviewObject.getString("author");
+                    ((TextView)reviewItem.findViewById(R.id.list_item_author_view)).setText(author);
+                    ((TextView)reviewItem.findViewById(R.id.list_item_content_view)).setText(content);
+                    mLinearLayout.addView(reviewItem);
+                }
+            } catch (InterruptedException | ExecutionException | JSONException e) {
+                e.printStackTrace();
+            }
+
+        //}
+        /*mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
+        mReviewAdapter = new ReviewAdapter(this, reviewCursor, 0);
+        mListViewForReviews.setAdapter(mReviewAdapter);*/
+
+        //getSupportLoaderManager().initLoader(VIDEO_LOADER, null, this);
+        //getSupportLoaderManager().initLoader(REVIEW_LOADER, null, this);
 
         //Utility.setDynamicHeight(mListViewForReviews);
     }
@@ -184,7 +228,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
-    @Override
+    /*@Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         switch (id)
@@ -239,5 +283,5 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 mReviewAdapter.swapCursor(null);
                 break;
         }
-    }
+    }*/
 }

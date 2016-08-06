@@ -6,8 +6,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -19,11 +20,6 @@ import android.widget.Toast;
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.concurrent.ExecutionException;
 //implements LoaderManager.LoaderCallbacks<Cursor>
 public class DetailActivity extends AppCompatActivity {
 
@@ -33,6 +29,9 @@ public class DetailActivity extends AppCompatActivity {
     private static final int REVIEW_LOADER = 1;
     private Cursor mVideoCursor;
     private LinearLayout mLinearLayout;
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mRecycleAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
 
     Button btn;
     private static String movie_id;
@@ -51,6 +50,9 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
 
         mLinearLayout = (LinearLayout) findViewById(R.id.detail_layout);
+        mRecyclerView = (RecyclerView) findViewById(R.id.video_review_recycler_view);
+        mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
 
         btn = (Button) findViewById(R.id.movie_favourite_button);
 
@@ -104,20 +106,21 @@ public class DetailActivity extends AppCompatActivity {
         Picasso.with(this).load(poster_path).into(movie_poster);
 
         //Get Video Details
-        /*Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
+        Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
         mVideoCursor = getContentResolver().query(videoUri,
                 null,
                 MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
                 new String[]{movie_id},
                 null);
-        mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
-        mVideoAdapter = new VideoAdapter(this, mVideoCursor, 0);
-        mListViewForVideos.setAdapter(mVideoAdapter);*/
-        /*if (mVideoCursor.getCount() == 0)
+        //mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
+        //mVideoAdapter = new VideoAdapter(this, mVideoCursor, 0);
+        //mListViewForVideos.setAdapter(mVideoAdapter);
+        if (mVideoCursor.getCount() == 0)
         {
-            */
-        FetchVideoTask fetchVideoTask = new FetchVideoTask(this);
-            try {
+
+            FetchVideoTask fetchVideoTask = new FetchVideoTask(this);
+            fetchVideoTask.execute(movie_id);
+            /*try {
                 movieString = fetchVideoTask.execute(movie_id).get();
                 JSONObject object = new JSONObject(movieString);
                 JSONArray resultsArray = object.getJSONArray("results");
@@ -134,12 +137,9 @@ public class DetailActivity extends AppCompatActivity {
 
             } catch (InterruptedException | ExecutionException | JSONException e) {
                 e.printStackTrace();
-            }
-        //}
-//        else
-//        {
-//            Utility.setDynamicHeight(mListViewForVideos);
-//        }
+            }*/
+        }
+
 
 
         /*mListViewForVideos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -159,15 +159,17 @@ public class DetailActivity extends AppCompatActivity {
         });*/
 
         //Get Review Details
-        /*Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
+        Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
         Cursor reviewCursor = getContentResolver().query(reviewUri,
                 null,
                 MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ? ",
                 new String[]{movie_id},
                 null);
-        if (reviewCursor.getCount() == 0) {*/
+        if (reviewCursor.getCount() == 0)
+        {
             FetchReviewTask fetchReviewTask = new FetchReviewTask(this);
-            try {
+            fetchReviewTask.execute(movie_id);
+            /*try {
                 String reviewString = fetchReviewTask.execute(movie_id).get();
                 JSONObject object = new JSONObject(reviewString);
                 String movieId = object.getString("id");
@@ -185,9 +187,10 @@ public class DetailActivity extends AppCompatActivity {
                 }
             } catch (InterruptedException | ExecutionException | JSONException e) {
                 e.printStackTrace();
-            }
-
-        //}
+            }*/
+        }
+        mRecycleAdapter = new RecycleAdapter(this,mVideoCursor,reviewCursor);
+        mRecyclerView.setAdapter(mRecycleAdapter);
         /*mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
         mReviewAdapter = new ReviewAdapter(this, reviewCursor, 0);
         mListViewForReviews.setAdapter(mReviewAdapter);*/

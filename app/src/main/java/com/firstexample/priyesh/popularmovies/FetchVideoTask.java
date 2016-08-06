@@ -26,9 +26,15 @@ import java.util.Vector;
 public class FetchVideoTask extends AsyncTask<String,Void,String> {
 
     private final Context mContext;
+    private OnPostExecuteOfAsyncTask listener;
+    private DetailActivity detailActivity;
+    final String BASE_URI = "http://img.youtube.com/vi/";
+    final String IMG_PATH = "0.jpg";
 
-    public FetchVideoTask(Context mContext) {
+    public FetchVideoTask(Context mContext, DetailActivity detailActivity,OnPostExecuteOfAsyncTask listener) {
         this.mContext = mContext;
+        this.detailActivity = detailActivity;
+        this.listener = listener;
     }
 
     @Override
@@ -94,6 +100,8 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
+        //LinearLayout mLinearLayout = (LinearLayout) detailActivity.findViewById(R.id.detail_layout);
+
         try {
             JSONObject object = new JSONObject(s);
             String movieId = object.getString("id");
@@ -102,6 +110,8 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
             for (int position = 0; position < resultsArray.length(); position++)
             {
                 JSONObject videoObject = resultsArray.getJSONObject(position);
+                /*View videoItem = LayoutInflater.from(detailActivity).inflate(R.layout.video_item,null);
+                ImageView iconView = (ImageView) videoItem.findViewById(R.id.list_image_video);*/
 
                 ContentValues videoValues = new ContentValues();
                 videoValues.put(MovieContract.VideoEntry.COLUMN_MOVIE_ID,movieId);
@@ -110,6 +120,30 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
                 videoValues.put(MovieContract.VideoEntry.COLUMN_VIDEO_TYPE,videoObject.getString("type"));
                 videoValues.put(MovieContract.VideoEntry.COLUMN_VIDEO_NAME,videoObject.getString("name"));
                 cVVector.add(videoValues);
+                /*((TextView)videoItem.findViewById(R.id.list_text_video)).setText(videoObject.getString("name"));
+                final String key = videoObject.getString("key");
+                Uri builtThumbUri = Uri.parse(BASE_URI).buildUpon()
+                        .appendPath(key)
+                        .appendPath(IMG_PATH)
+                        .build();
+                Picasso.with(mContext).load(builtThumbUri).into(iconView);
+                videoItem.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + key));
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            mContext.startActivity(intent);
+                        }catch (ActivityNotFoundException ex) {
+                            Intent intent = new Intent(Intent.ACTION_VIEW,
+                                    Uri.parse("http://www.youtube.com/watch?v=" + key));
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            mContext.startActivity(intent);
+                        }
+                    }
+                });
+                mLinearLayout.addView(videoItem);
+                Log.v("In FetchVideoTask:","Added");*/
             }
             int rowsInserted = 0;
             if(cVVector.size() > 0)
@@ -118,13 +152,10 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
                 cVVector.toArray(cvArray);
                 rowsInserted = mContext.getContentResolver().bulkInsert(MovieContract.VideoEntry.CONTENT_URI, cvArray);
                 Log.v("Rows InsertedInVideo: ",(rowsInserted+""));
+                listener.afterVideoPostExecute();
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        //HOw can I get the cursor here
-        /*ListView mListViewForVideos = (ListView) mContext.findViewById(R.id.listView_youtube_videos);
-        VideoAdapter mVideoAdapter = new VideoAdapter(this, videoCursor, 0);
-        mListViewForVideos.setAdapter(mVideoAdapter);*/
     }
 }

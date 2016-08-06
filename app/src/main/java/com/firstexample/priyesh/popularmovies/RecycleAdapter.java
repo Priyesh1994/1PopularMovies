@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +35,10 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public int getItemViewType(int position) {
         int temp = mVideoCursor.getCount();
-        if(position <= temp)
+        Log.v("Total",(temp+mReviewCursor.getCount())+"");
+        Log.v("Temp",temp+"");
+        Log.v("Position",position+"");
+        if(position < temp)
             return VIDEO_CURSOR;
         else
             return REVIEW_CURSOR;
@@ -48,6 +52,7 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         {
             case VIDEO_CURSOR:
             {
+                Log.v("Entered","Video");
                 View itemType = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.list_item_video, parent, false);
                 viewHolder = new ViewHolderVideos(itemType);
@@ -55,6 +60,7 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
             case REVIEW_CURSOR:
             {
+                Log.v("Entered","Review");
                 View itemType = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.list_item_review, parent, false);
                 viewHolder = new ViewHolderReviews(itemType);
@@ -72,16 +78,18 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        switch (getItemViewType(position))
-        {
-            case VIDEO_CURSOR:
-                ViewHolderVideos videos = (ViewHolderVideos) holder;
-                videos.bindViews(mContext, mVideoCursor);
-                break;
-            case REVIEW_CURSOR:
-                ViewHolderReviews reviews = (ViewHolderReviews) holder;
-                reviews.bindViews(mContext, mReviewCursor);
-                break;
+        if(position < mVideoCursor.getCount()) {
+            Log.v("Bind", "Video");
+            mVideoCursor.moveToPosition(position);
+            ViewHolderVideos videos = (ViewHolderVideos) holder;
+            videos.bindViews(mContext, mVideoCursor);
+        }
+        else {
+            Log.v("Bind", "Review");
+            int temp = position - mVideoCursor.getCount();
+            mReviewCursor.moveToPosition(temp);
+            ViewHolderReviews reviews = (ViewHolderReviews) holder;
+            reviews.bindViews(mContext, mReviewCursor);
         }
     }
 
@@ -142,5 +150,11 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             author_view.setText(author_name);
             content_view.setText(content);
         }
+    }
+
+    public void updateVideoCursor(Cursor videoCursor)
+    {
+        mVideoCursor = videoCursor;
+        notifyDataSetChanged();
     }
 }

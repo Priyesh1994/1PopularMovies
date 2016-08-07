@@ -1,6 +1,7 @@
 package com.firstexample.priyesh.popularmovies;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -29,10 +30,11 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
     private static final int REVIEW_LOADER = 1;
     private Cursor mVideoCursor,mReviewCursor;
     private LinearLayout mLinearLayout;
-    private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mRecycleAdapter;
-    private RecyclerView.LayoutManager mLayoutManager;
+    private static RecyclerView mRecyclerView;
+    private static RecyclerView.Adapter mRecycleAdapter;
+    private static RecyclerView.LayoutManager mLayoutManager;
     private OnPostExecuteOfAsyncTask list;
+    private static int flag = 0;
 
     Button btn;
     private static String movie_id;
@@ -54,6 +56,7 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
         mRecyclerView = (RecyclerView) findViewById(R.id.video_review_recycler_view);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
+        list = new DetailActivity();
 
         btn = (Button) findViewById(R.id.movie_favourite_button);
 
@@ -113,6 +116,23 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
                 MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
                 new String[]{movie_id},
                 null);
+
+        //Get Review Details
+        Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
+        mReviewCursor = getContentResolver().query(reviewUri,
+                null,
+                MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ? ",
+                new String[]{movie_id},
+                null);
+
+        mRecycleAdapter = new RecycleAdapter(this, mVideoCursor, mReviewCursor);
+        mRecyclerView.setAdapter(mRecycleAdapter);
+        mRecyclerView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
         /*mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
         mVideoAdapter = new VideoAdapter(this, mVideoCursor, 0);
         mListViewForVideos.setAdapter(mVideoAdapter);*/
@@ -121,7 +141,6 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
             //mListViewForVideos.setVisibility(View.GONE);
             FetchVideoTask fetchVideoTask = new FetchVideoTask(getApplicationContext(),this,list);
             fetchVideoTask.execute(movie_id);
-
             /*try {
                 movieString = fetchVideoTask.execute(movie_id).get();
                 JSONObject object = new JSONObject(movieString);
@@ -160,20 +179,14 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
             }
         });*/
 
-        //Get Review Details
-        Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
-        mReviewCursor = getContentResolver().query(reviewUri,
-                null,
-                MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ? ",
-                new String[]{movie_id},
-                null);
+
         /*mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
         mReviewAdapter = new ReviewAdapter(this, reviewCursor, 0);
         mListViewForReviews.setAdapter(mReviewAdapter);*/
         if (mReviewCursor.getCount() == 0)
         {
             //mListViewForReviews.setVisibility(View.GONE);
-            FetchReviewTask fetchReviewTask = new FetchReviewTask(getApplicationContext(),this);
+            FetchReviewTask fetchReviewTask = new FetchReviewTask(getApplicationContext(),this,list);
             fetchReviewTask.execute(movie_id);
 
             /*try {
@@ -197,8 +210,6 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
             }*/
         }
 
-        mRecycleAdapter = new RecycleAdapter(this, mVideoCursor, mReviewCursor);
-        mRecyclerView.setAdapter(mRecycleAdapter);
 
 
 //        getSupportLoaderManager().initLoader(VIDEO_LOADER, null, this);
@@ -239,18 +250,45 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
     }
 
     @Override
-    public void afterVideoPostExecute() {
+    public void afterVideoPostExecute(Context c) {
         Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
-        mVideoCursor = getContentResolver().query(videoUri,
+        mVideoCursor = c.getContentResolver().query(videoUri,
                 null,
                 MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
                 new String[]{movie_id},
                 null);
-        mRecycleAdapter = new RecycleAdapter(this, mVideoCursor, mReviewCursor);
-        mRecyclerView.setAdapter(mRecycleAdapter);
     }
 
-    /*@Override
+    @Override
+    public void afterReviewPostExecute(Context c) {
+        Uri reviewUri = MovieContract.ReviewEntry.buildReviewUriFromId(movie_id);
+        mReviewCursor = c.getContentResolver().query(reviewUri,
+                null,
+                MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ? ",
+                new String[]{movie_id},
+                null);
+        //mRecycleAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void updateRecyclerView() {
+        Log.v("Flag:",flag+"");
+        if(flag >= 1)
+        {
+            Log.v("Updating Recycler View","Started updating");
+            mRecycleAdapter = new RecycleAdapter(this, mVideoCursor, mReviewCursor);
+            mRecyclerView.setAdapter(mRecycleAdapter);
+            //Log.v("Item Count before:",mRecycleAdapter.getItemCount()+"");
+            mRecycleAdapter.notifyDataSetChanged();
+            flag = 0;
+            //Log.v("Item Count after:",mRecycleAdapter.getItemCount()+"");
+            //mRecycleAdapter = new RecycleAdapter(this, mVideoCursor, mReviewCursor);
+            //mRecyclerView.setAdapter(mRecycleAdapter);
+        }
+        else
+            flag++;
+    }
+/*@Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         switch (id)

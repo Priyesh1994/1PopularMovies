@@ -1,6 +1,8 @@
 package com.firstexample.priyesh.popularmovies;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
@@ -80,8 +82,25 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if(position < mVideoCursor.getCount()) {
             Log.v("Bind", "Video");
+
             mVideoCursor.moveToPosition(position);
             ViewHolderVideos videos = (ViewHolderVideos) holder;
+            ((ViewHolderVideos) holder).iconView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String key = mVideoCursor.getString(mVideoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + key));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        mContext.startActivity(intent);
+                    }catch (ActivityNotFoundException ex) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW,
+                                Uri.parse("http://www.youtube.com/watch?v=" + key));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        mContext.startActivity(intent);
+                    }
+                }
+            });
             videos.bindViews(mContext, mVideoCursor);
         }
         else {
@@ -97,6 +116,8 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public int getItemCount() {
         return (mVideoCursor.getCount() + mReviewCursor.getCount());
     }
+
+
 
     /*public class ViewHolder extends RecyclerView.ViewHolder {
         public ViewHolder(View itemView) {
@@ -152,9 +173,4 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    public void updateVideoCursor(Cursor videoCursor)
-    {
-        mVideoCursor = videoCursor;
-        notifyDataSetChanged();
-    }
 }

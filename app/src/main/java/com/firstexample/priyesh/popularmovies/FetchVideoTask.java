@@ -152,8 +152,9 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
                 cVVector.toArray(cvArray);
                 rowsInserted = mContext.getContentResolver().bulkInsert(MovieContract.VideoEntry.CONTENT_URI, cvArray);
                 Log.v("Rows InsertedInVideo: ",(rowsInserted+""));
-                listener.afterVideoPostExecute();
             }
+            listener.afterVideoPostExecute(mContext);
+            listener.updateRecyclerView();
         } catch (JSONException e) {
             e.printStackTrace();
         }

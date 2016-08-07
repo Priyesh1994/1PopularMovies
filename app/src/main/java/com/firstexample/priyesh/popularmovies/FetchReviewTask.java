@@ -26,11 +26,13 @@ import java.util.Vector;
 public class FetchReviewTask extends AsyncTask<String,Void,String> {
 
     private final Context mContext;
+    private OnPostExecuteOfAsyncTask listener;
     private DetailActivity detailActivity;
 
-    public FetchReviewTask(Context mContext, DetailActivity detailActivity) {
+    public FetchReviewTask(Context mContext, DetailActivity detailActivity,OnPostExecuteOfAsyncTask listener) {
         this.mContext = mContext;
         this.detailActivity = detailActivity;
+        this.listener = listener;
     }
 
     @Override
@@ -129,6 +131,8 @@ public class FetchReviewTask extends AsyncTask<String,Void,String> {
                 rowsInserted = mContext.getContentResolver().bulkInsert(MovieContract.ReviewEntry.CONTENT_URI, cvArray);
                 Log.v("Rows InsertedInReview: ",(rowsInserted+""));
             }
+            listener.afterReviewPostExecute(mContext);
+            listener.updateRecyclerView();
         } catch (JSONException e) {
             e.printStackTrace();
         }

@@ -89,6 +89,7 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
 
         Intent intent = getActivity().getIntent();
         Bundle bundle = intent.getExtras();
+        if(bundle == null) return null;
         String formatted_release_date = null;
         if (bundle != null) {
             isFavourite = bundle.getString(getString(R.string.isFavourite));
@@ -184,8 +185,9 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
         /*Utility.setDynamicHeight(mListViewForReviews);
         Utility.setDynamicHeight(mListViewForVideos);*/
 
-        //mRecyclerView.setNestedScrollingEnabled(true);
+        mRecyclerView.setNestedScrollingEnabled(true);
         return rootView;
+
     }
 
     public void onAddToFavourites(View view) {

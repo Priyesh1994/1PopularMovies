@@ -17,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private String first_sort_order;
+    private boolean mTwoPane;
     //private final Context mContext;
 
     @Override
@@ -26,6 +27,21 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         first_sort_order = prefs.getString(getString(R.string.sort_key),
                 getString(R.string.pref_sort_popular));
+        if(findViewById(R.id.detail_movie_container) != null)
+        {
+            mTwoPane = true;
+
+            if(savedInstanceState == null)
+            {
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.detail_movie_container, new DetailFragment())
+                        .commit();
+            }
+        }
+        else
+        {
+            mTwoPane = false;
+        }
         //MainMovieFragment movieFragment = new MainMovieFragment();
     //        getSupportFragmentManager().beginTransaction()
 //                .replace(R.id.fragment_main_movie,movieFragment)

@@ -79,7 +79,7 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
         if(position < mVideoCursor.getCount()) {
             Log.v("Bind", "Video");
 
@@ -88,6 +88,7 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ((ViewHolderVideos) holder).iconView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    mVideoCursor.moveToPosition(position);
                     String key = mVideoCursor.getString(mVideoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + key));

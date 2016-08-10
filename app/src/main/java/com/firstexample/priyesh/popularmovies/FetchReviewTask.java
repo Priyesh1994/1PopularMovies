@@ -27,11 +27,9 @@ public class FetchReviewTask extends AsyncTask<String,Void,String> {
 
     private final Context mContext;
     private OnPostExecuteOfAsyncTask listener;
-    private DetailActivity detailActivity;
 
-    public FetchReviewTask(Context mContext, DetailActivity detailActivity,OnPostExecuteOfAsyncTask listener) {
+    public FetchReviewTask(Context mContext,OnPostExecuteOfAsyncTask listener) {
         this.mContext = mContext;
-        this.detailActivity = detailActivity;
         this.listener = listener;
     }
 
@@ -98,9 +96,6 @@ public class FetchReviewTask extends AsyncTask<String,Void,String> {
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-        /*Log.v("In FetchReviewTask:","Started");
-        LinearLayout mLinearLayout;
-        mLinearLayout = (LinearLayout) detailActivity.findViewById(R.id.detail_layout);*/
         try {
             JSONObject object = new JSONObject(s);
             String movieId = object.getString("id");
@@ -117,10 +112,6 @@ public class FetchReviewTask extends AsyncTask<String,Void,String> {
                 reviewValues.put(MovieContract.ReviewEntry.COLUMN_CONTENT,reviewObject.getString("content"));
                 reviewValues.put(MovieContract.ReviewEntry.COLUMN_AUTHOR,reviewObject.getString("author"));
                 cVVector.add(reviewValues);
-                /*((TextView)reviewItem.findViewById(R.id.list_item_author_view)).setText(reviewObject.getString("author"));
-                ((TextView)reviewItem.findViewById(R.id.list_item_content_view)).setText(reviewObject.getString("content"));
-                mLinearLayout.addView(reviewItem);
-                Log.v("In FetchReviewTask:","Added");*/
             }
             Log.v("In FetchReviewTask:","Completed");
             int rowsInserted = 0;

@@ -27,13 +27,9 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
 
     private final Context mContext;
     private OnPostExecuteOfAsyncTask listener;
-    private DetailActivity detailActivity;
-    final String BASE_URI = "http://img.youtube.com/vi/";
-    final String IMG_PATH = "0.jpg";
 
-    public FetchVideoTask(Context mContext, DetailActivity detailActivity,OnPostExecuteOfAsyncTask listener) {
+    public FetchVideoTask(Context mContext, OnPostExecuteOfAsyncTask listener) {
         this.mContext = mContext;
-        this.detailActivity = detailActivity;
         this.listener = listener;
     }
 
@@ -100,8 +96,6 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-        //LinearLayout mLinearLayout = (LinearLayout) detailActivity.findViewById(R.id.detail_layout);
-
         try {
             JSONObject object = new JSONObject(s);
             String movieId = object.getString("id");
@@ -110,9 +104,6 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
             for (int position = 0; position < resultsArray.length(); position++)
             {
                 JSONObject videoObject = resultsArray.getJSONObject(position);
-                /*View videoItem = LayoutInflater.from(detailActivity).inflate(R.layout.video_item,null);
-                ImageView iconView = (ImageView) videoItem.findViewById(R.id.list_image_video);*/
-
                 ContentValues videoValues = new ContentValues();
                 videoValues.put(MovieContract.VideoEntry.COLUMN_MOVIE_ID,movieId);
                 videoValues.put(MovieContract.VideoEntry.COLUMN_VIDEO_ID,videoObject.getString("id"));
@@ -120,30 +111,6 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
                 videoValues.put(MovieContract.VideoEntry.COLUMN_VIDEO_TYPE,videoObject.getString("type"));
                 videoValues.put(MovieContract.VideoEntry.COLUMN_VIDEO_NAME,videoObject.getString("name"));
                 cVVector.add(videoValues);
-                /*((TextView)videoItem.findViewById(R.id.list_text_video)).setText(videoObject.getString("name"));
-                final String key = videoObject.getString("key");
-                Uri builtThumbUri = Uri.parse(BASE_URI).buildUpon()
-                        .appendPath(key)
-                        .appendPath(IMG_PATH)
-                        .build();
-                Picasso.with(mContext).load(builtThumbUri).into(iconView);
-                videoItem.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        try {
-                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + key));
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            mContext.startActivity(intent);
-                        }catch (ActivityNotFoundException ex) {
-                            Intent intent = new Intent(Intent.ACTION_VIEW,
-                                    Uri.parse("http://www.youtube.com/watch?v=" + key));
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            mContext.startActivity(intent);
-                        }
-                    }
-                });
-                mLinearLayout.addView(videoItem);
-                Log.v("In FetchVideoTask:","Added");*/
             }
             int rowsInserted = 0;
             if(cVVector.size() > 0)

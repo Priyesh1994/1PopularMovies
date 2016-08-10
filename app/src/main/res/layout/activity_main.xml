@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<GridView xmlns:android="http://schemas.android.com/apk/res/android"
+<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fragment_main_movie"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    tools:ignore="MergeRootFrame"
+    android:name="com.firstexample.priyesh.popularmovies.MainMovieFragment"
+    tools:layout="@android:layout/list_content"/>
+<!--<GridView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/movies_grid"
     android:layout_width="match_parent"
@@ -10,4 +19,4 @@
     android:adjustViewBounds="true"
     tools:context="com.firstexample.priyesh.popularmovies.MainActivity">
 
-</GridView>
+</GridView>-->

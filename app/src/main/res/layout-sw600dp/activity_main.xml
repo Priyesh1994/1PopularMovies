@@ -4,24 +4,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <GridView xmlns:android="http://schemas.android.com/apk/res/android"
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/movies_grid"
-        android:layout_width="0dp"
-        android:layout_weight="2"
+        android:id="@+id/fragment_main_movie"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:numColumns="2"
-        android:stretchMode="columnWidth"
-        android:gravity="center"
-        android:adjustViewBounds="true"
-        tools:context="com.firstexample.priyesh.popularmovies.MainActivity">
-    </GridView>
+        tools:context=".MainActivity"
+        tools:ignore="MergeRootFrame"
+        android:name="com.firstexample.priyesh.popularmovies.MainActivity"
+        tools:layout="@android:layout/list_content"/>
 
     <FrameLayout
         android:layout_width="0dp"
         android:layout_weight="4"
         android:layout_height="match_parent"
-        android:id="@+id/detail_fragment"/>
-
+        android:id="@+id/detail_movie_container"/>
 
 </LinearLayout>

@@ -1,39 +1,25 @@
 package com.firstexample.priyesh.popularmovies;
 
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.firstexample.priyesh.popularmovies.data.MovieContract;
-import com.squareup.picasso.Picasso;
 
 //implements LoaderManager.LoaderCallbacks<Cursor>
-public class DetailActivity extends AppCompatActivity implements OnPostExecuteOfAsyncTask{
+//implements OnPostExecuteOfAsyncTask
+public class DetailActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = DetailActivity.class.getSimpleName();
 
     private static final int VIDEO_LOADER = 0;
     private static final int REVIEW_LOADER = 1;
     private Cursor mVideoCursor,mReviewCursor;
-    private LinearLayout mLinearLayout;
     private static RecyclerView mRecyclerView;
     private static RecyclerView.Adapter mRecycleAdapter;
     private static RecyclerView.LayoutManager mLayoutManager;
-    private OnPostExecuteOfAsyncTask list;
     private static int flag = 0;
 
     Button btn;
@@ -45,18 +31,24 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
     private ReviewAdapter mReviewAdapter;
     private ListView mListViewForVideos;
     private ListView mListViewForReviews;
-    private String movieString;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+        if(savedInstanceState == null )
+        {
+            DetailFragment fragment = new DetailFragment();
 
-        mLinearLayout = (LinearLayout) findViewById(R.id.detail_layout);
-        mRecyclerView = (RecyclerView) findViewById(R.id.video_review_recycler_view);
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.detail_movie_container,fragment)
+                    .commit();
+        }
+
+        /*mRecyclerView = (RecyclerView) findViewById(R.id.video_review_recycler_view);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        list = new DetailActivity();
+        OnPostExecuteOfAsyncTask list = new DetailActivity();
 
         btn = (Button) findViewById(R.id.movie_favourite_button);
 
@@ -133,93 +125,32 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
 
             }
         });
-        /*mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
+        *//*mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
         mVideoAdapter = new VideoAdapter(this, mVideoCursor, 0);
-        mListViewForVideos.setAdapter(mVideoAdapter);*/
+        mListViewForVideos.setAdapter(mVideoAdapter);*//*
         if (mVideoCursor.getCount() == 0)
         {
-            //mListViewForVideos.setVisibility(View.GONE);
-            FetchVideoTask fetchVideoTask = new FetchVideoTask(getApplicationContext(),this,list);
+            FetchVideoTask fetchVideoTask = new FetchVideoTask(getApplicationContext(), list);
             fetchVideoTask.execute(movie_id);
-            /*try {
-                movieString = fetchVideoTask.execute(movie_id).get();
-                JSONObject object = new JSONObject(movieString);
-                JSONArray resultsArray = object.getJSONArray("results");
-                for (int position = 0; position < resultsArray.length(); position++)
-                {
-                    View videoItem = LayoutInflater.from(this).inflate(R.layout.video_item,null);
-                    JSONObject videoObject = resultsArray.getJSONObject(position);
-                    String key = videoObject.getString("key");
-                    String name = videoObject.getString("name");
-                    ((TextView)videoItem.findViewById(R.id.list_text_video)).setText(name);
-                    mLinearLayout.addView(videoItem);
-                    //this.addContentView(videoItem,);
-                }
-
-            } catch (InterruptedException | ExecutionException | JSONException e) {
-                e.printStackTrace();
-            }*/
         }
 
 
-/*
-        mListViewForVideos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                mVideoCursor.moveToPosition(position);
-                String key = mVideoCursor.getString(mVideoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + key));
-                    startActivity(intent);
-                }catch (ActivityNotFoundException ex) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("http://www.youtube.com/watch?v=" + key));
-                    startActivity(intent);
-                }
-            }
-        });*/
-
-
-        /*mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
+        *//*mListViewForReviews = (ListView) findViewById(R.id.listView_reviews);
         mReviewAdapter = new ReviewAdapter(this, reviewCursor, 0);
-        mListViewForReviews.setAdapter(mReviewAdapter);*/
+        mListViewForReviews.setAdapter(mReviewAdapter);*//*
         if (mReviewCursor.getCount() == 0)
         {
-            //mListViewForReviews.setVisibility(View.GONE);
-            FetchReviewTask fetchReviewTask = new FetchReviewTask(getApplicationContext(),this,list);
+            FetchReviewTask fetchReviewTask = new FetchReviewTask(getApplicationContext(), list);
             fetchReviewTask.execute(movie_id);
-
-            /*try {
-                String reviewString = fetchReviewTask.execute(movie_id).get();
-                JSONObject object = new JSONObject(reviewString);
-                String movieId = object.getString("id");
-                JSONArray resultsArray = object.getJSONArray("results");
-
-                for (int position = 0; position < resultsArray.length(); position++)
-                {
-                    View reviewItem = LayoutInflater.from(this).inflate(R.layout.review_item,null);
-                    JSONObject reviewObject = resultsArray.getJSONObject(position);
-                    String content = reviewObject.getString("content");
-                    String author = reviewObject.getString("author");
-                    ((TextView)reviewItem.findViewById(R.id.list_item_author_view)).setText(author);
-                    ((TextView)reviewItem.findViewById(R.id.list_item_content_view)).setText(content);
-                    mLinearLayout.addView(reviewItem);
-                }
-            } catch (InterruptedException | ExecutionException | JSONException e) {
-                e.printStackTrace();
-            }*/
         }
-
-
-
 //        getSupportLoaderManager().initLoader(VIDEO_LOADER, null, this);
 //        getSupportLoaderManager().initLoader(REVIEW_LOADER, null, this);
 
-        /*Utility.setDynamicHeight(mListViewForReviews);
+        *//*Utility.setDynamicHeight(mListViewForReviews);
         Utility.setDynamicHeight(mListViewForVideos);*/
     }
 
-    public void onAddToFavourites(View view) {
+    /*public void onAddToFavourites(View view) {
         Uri uri = MovieContract.FavouriteEntry.buildFavouriteMovieUriFromId(movie_id);
         Cursor cur = getContentResolver().query(
                 uri,
@@ -247,9 +178,9 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
         {
             Toast.makeText(this,"Movie already added to favourites",Toast.LENGTH_SHORT).show();
         }
-    }
+    }*/
 
-    @Override
+/*    @Override
     public void afterVideoPostExecute(Context c) {
         Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
         mVideoCursor = c.getContentResolver().query(videoUri,
@@ -281,13 +212,10 @@ public class DetailActivity extends AppCompatActivity implements OnPostExecuteOf
             //Log.v("Item Count before:",mRecycleAdapter.getItemCount()+"");
             mRecycleAdapter.notifyDataSetChanged();
             flag = 0;
-            //Log.v("Item Count after:",mRecycleAdapter.getItemCount()+"");
-            //mRecycleAdapter = new RecycleAdapter(this, mVideoCursor, mReviewCursor);
-            //mRecyclerView.setAdapter(mRecycleAdapter);
         }
         else
             flag++;
-    }
+    }*/
 /*@Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 

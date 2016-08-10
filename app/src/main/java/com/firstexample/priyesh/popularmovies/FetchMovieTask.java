@@ -1,15 +1,12 @@
 package com.firstexample.priyesh.popularmovies;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.GridView;
 
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
 
@@ -44,23 +41,22 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
     private static final String LOG_TAG = FetchMovieTask.class.getSimpleName();
 
     private String movie_id;
+    private View mRootView;
     private String[] movie_id_for_video;
 
     private final Context mContext;
 
-    private MainActivity mainActivity;
+    private Activity mainActivity;
 
-    public FetchMovieTask(Context mContext, MainActivity activity) {
+    public FetchMovieTask(Context mContext) {
         this.mContext = mContext;
-        mainActivity = activity;
+        //mRootView = rootview;
     }
 
     @Override
     protected void onPostExecute(final String movieString) {
-        GridView view = (GridView) mainActivity.findViewById(R.id.movies_grid);
-        String[] posterArray = new String[0];
+//        GridView view = (GridView) mRootView.findViewById(R.id.movies_grid);
         try {
-            posterArray = getDataFromJSON(movieString);
             JSONObject posterJSON = new JSONObject(movieString);
             JSONArray movieArray = posterJSON.getJSONArray(RESULT_STRING);
             Vector<ContentValues> cVVector = new Vector<ContentValues>(movieArray.length());
@@ -102,7 +98,7 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        view.setAdapter(new ImageAdapter(mContext,posterArray));
+        /*view.setAdapter(new ImageAdapter(mContext,posterArray));
 
         view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -129,7 +125,7 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
                 mainActivity.startActivity(intent);
             }
         });
-
+*/
     }
 
 
@@ -198,24 +194,5 @@ public class FetchMovieTask extends AsyncTask<String,Void,String> {
         return null;
     }
 
-    private String[] getDataFromJSON(String movieString) throws JSONException
-    {
-        JSONObject posterJSON = new JSONObject(movieString);
-        JSONArray posterArray = posterJSON.getJSONArray(RESULT_STRING);
 
-        String[] resultStr = new String[posterArray.length()];
-
-        for(int i = 0; i < posterArray.length(); i++)
-        {
-            String moviePoster;
-            String posterUrl;
-            JSONObject movieDetails = posterArray.getJSONObject(i);
-            moviePoster = movieDetails.getString(POSTER_PATH);
-
-            posterUrl = BASE_URL + moviePoster;
-            //Log.v(LOG_TAG,posterUrl);
-            resultStr[i] = posterUrl;
-        }
-        return resultStr;
-    }
 }

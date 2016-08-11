@@ -1,6 +1,5 @@
 package com.firstexample.priyesh.popularmovies;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -16,11 +15,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
-import com.squareup.picasso.Picasso;
 
 /**
  * Created by PRIYESH on 02-08-2016.
@@ -30,7 +26,7 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
     private static final String LOG_TAG = DetailFragment.class.getSimpleName();
 
     private static String movie_id;
-    private Cursor mVideoCursor,mReviewCursor;
+    private Cursor mVideoCursor,mReviewCursor,mMovieCursor;
     private static RecyclerView mRecyclerView;
     private static RecyclerView.Adapter mRecycleAdapter;
     private static RecyclerView.LayoutManager mLayoutManager;
@@ -53,7 +49,7 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
         //TODO: check here for detail activity
         OnPostExecuteOfAsyncTask list = new DetailFragment();
 
-        btn = (Button) rootView.findViewById(R.id.movie_favourite_button);
+        /*btn = (Button) rootView.findViewById(R.id.movie_favourite_button);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -85,7 +81,7 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
                     Toast.makeText(getContext(),"Movie already added to favourites",Toast.LENGTH_SHORT).show();
                 }
             }
-        });
+        });*/
 
         Intent intent = getActivity().getIntent();
         Bundle bundle = intent.getExtras();
@@ -94,12 +90,11 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
         if (bundle != null) {
             isFavourite = bundle.getString(getString(R.string.isFavourite));
             Uri uri;
-            Cursor cursor;
             if(isFavourite.equals(getString(R.string.isNoFavourite)))
             {
                 movie_id = bundle.getString(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
                 uri = MovieContract.MovieEntry.buildMovieUriFromId(movie_id);
-                cursor = getActivity().getContentResolver().query(uri,
+                mMovieCursor = getActivity().getContentResolver().query(uri,
                         null,
                         MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ? ",
                         new String[]{movie_id},
@@ -108,17 +103,18 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
             else
             {
                 //Remove the Favourites button
-                btn.setVisibility(View.GONE);
+                //btn.setVisibility(View.GONE);
                 movie_id = bundle.getString(MovieContract.FavouriteEntry.COLUMN_MOVIE_ID);
                 uri = MovieContract.FavouriteEntry.buildFavouriteMovieUriFromId(movie_id);
-                cursor = getActivity().getContentResolver().query(uri,
+                mMovieCursor = getActivity().getContentResolver().query(uri,
                         null,
                         MovieContract.FavouriteEntry.COLUMN_MOVIE_ID + " = ? ",
                         new String[]{movie_id},
                         null);
             }
+            //TODO: Have a look on below comment
             //As column name of both tables are same, we can go with same cursor
-            if(cursor.moveToFirst())
+            /*if(cursor.moveToFirst())
             {
                 poster_path = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_POSTER_PATH));
                 release_date = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_RELEASE_DATE));
@@ -127,15 +123,15 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
                 vote_average = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE));
                 formatted_release_date = Utility.getFormattedMonthDay(release_date);
             }
-            cursor.close();
+            cursor.close();*/
         }
-        ((TextView) rootView.findViewById(R.id.movie_title)).setText(original_title);
+        /*((TextView) rootView.findViewById(R.id.movie_title)).setText(original_title);
         ((TextView) rootView.findViewById(R.id.movie_synopsis)).setText(overview);
         ((TextView) rootView.findViewById(R.id.movie_release_date)).setText(formatted_release_date);
         ((TextView) rootView.findViewById(R.id.movie_user_rating)).setText(vote_average);
 
         movie_poster = (ImageView) rootView.findViewById(R.id.movie_poster);
-        Picasso.with(getContext()).load(poster_path).into(movie_poster);
+        Picasso.with(getContext()).load(poster_path).into(movie_poster);*/
 
         //Get Video Details
         Uri videoUri = MovieContract.VideoEntry.buildVideoUriFromId(movie_id);
@@ -153,7 +149,7 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
                 new String[]{movie_id},
                 null);
 
-        mRecycleAdapter = new RecycleAdapter(getContext(), mVideoCursor, mReviewCursor);
+        mRecycleAdapter = new RecycleAdapter(getContext(), mVideoCursor, mReviewCursor, mMovieCursor);
         mRecyclerView.setAdapter(mRecycleAdapter);
         mRecyclerView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -185,12 +181,9 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
         /*Utility.setDynamicHeight(mListViewForReviews);
         Utility.setDynamicHeight(mListViewForVideos);*/
 
-        mRecyclerView.setNestedScrollingEnabled(true);
+        //mRecyclerView.setNestedScrollingEnabled(false);
         return rootView;
 
-    }
-
-    public void onAddToFavourites(View view) {
     }
 
 
@@ -216,12 +209,18 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
     }
 
     @Override
-    public void updateRecyclerView() {
+    public void updateRecyclerView(Context c) {
         Log.v("Flag:",flag+"");
         if(flag >= 1)
         {
+            Uri uri = MovieContract.MovieEntry.buildMovieUriFromId(movie_id);
+            mMovieCursor = c.getContentResolver().query(uri,
+                    null,
+                    MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ? ",
+                    new String[]{movie_id},
+                    null);
             Log.v("Updating Recycler View","Started updating");
-            mRecycleAdapter = new RecycleAdapter(getContext(), mVideoCursor, mReviewCursor);
+            mRecycleAdapter = new RecycleAdapter(c, mVideoCursor, mReviewCursor, mMovieCursor);
             mRecyclerView.setAdapter(mRecycleAdapter);
             //Log.v("Item Count before:",mRecycleAdapter.getItemCount()+"");
             mRecycleAdapter.notifyDataSetChanged();

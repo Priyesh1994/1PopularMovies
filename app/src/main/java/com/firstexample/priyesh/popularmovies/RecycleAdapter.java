@@ -1,6 +1,7 @@
 package com.firstexample.priyesh.popularmovies;
 
 import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,8 +11,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
 import com.squareup.picasso.Picasso;
@@ -21,29 +24,38 @@ import com.squareup.picasso.Picasso;
  */
 public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private Context mContext;
-    private Cursor mVideoCursor, mReviewCursor;
-    private static final int VIDEO_CURSOR = 0;
-    private static final int REVIEW_CURSOR = 1;
+    private static final String LOG_TAG = RecycleAdapter.class.getSimpleName();
+    private final Context mContext;
+    private Cursor mVideoCursor, mReviewCursor,mMovieCursor;
+    private static final int MOVIE_CURSOR = 0;
+    private static final int VIDEO_CURSOR = 1;
+    private static final int REVIEW_CURSOR = 2;
     final String BASE_URI = "http://img.youtube.com/vi/";
     final String IMG_PATH = "0.jpg";
 
-    public RecycleAdapter(Context context, Cursor videoCursor, Cursor reviewCursor) {
+    public RecycleAdapter(Context context, Cursor videoCursor, Cursor reviewCursor, Cursor mMovieCursor) {
         this.mContext = context;
         this.mVideoCursor = videoCursor;
         this.mReviewCursor = reviewCursor;
+        this.mMovieCursor = mMovieCursor;
     }
 
     @Override
     public int getItemViewType(int position) {
         int temp = mVideoCursor.getCount();
-        Log.v("Total",(temp+mReviewCursor.getCount())+"");
+        Log.v("Total",(temp+mReviewCursor.getCount())+mMovieCursor.getCount()+"");
         Log.v("Temp",temp+"");
         Log.v("Position",position+"");
-        if(position < temp)
-            return VIDEO_CURSOR;
-        else
-            return REVIEW_CURSOR;
+        if (position == 0)
+        {
+            return MOVIE_CURSOR;
+        }
+        else {
+            if (position <= temp)
+                return VIDEO_CURSOR;
+            else
+                return REVIEW_CURSOR;
+        }
         //return super.getItemViewType(position);
     }
 
@@ -52,6 +64,14 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         RecyclerView.ViewHolder viewHolder = null;
         switch (viewType)
         {
+            case MOVIE_CURSOR:
+            {
+                Log.v("Entered","MovieDetails");
+                View itemType = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.movie_details_recycler_view, parent, false);
+                viewHolder = new ViewHolderMovieDetails(itemType);
+                break;
+            }
             case VIDEO_CURSOR:
             {
                 Log.v("Entered","Video");
@@ -80,42 +100,53 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
-        if(position < mVideoCursor.getCount()) {
-            Log.v("Bind", "Video");
-
-            mVideoCursor.moveToPosition(position);
-            ViewHolderVideos videos = (ViewHolderVideos) holder;
-            ((ViewHolderVideos) holder).iconView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mVideoCursor.moveToPosition(position);
-                    String key = mVideoCursor.getString(mVideoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + key));
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        mContext.startActivity(intent);
-                    }catch (ActivityNotFoundException ex) {
-                        Intent intent = new Intent(Intent.ACTION_VIEW,
-                                Uri.parse("http://www.youtube.com/watch?v=" + key));
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        mContext.startActivity(intent);
-                    }
-                }
-            });
-            videos.bindViews(mContext, mVideoCursor);
+        if(position == 0)
+        {
+            Log.v("Bind", "MovieDetails");
+            mMovieCursor.moveToFirst();
+            ViewHolderMovieDetails movieDetails = (ViewHolderMovieDetails) holder;
+            movieDetails.bindViews(mContext, mMovieCursor);
         }
-        else {
-            Log.v("Bind", "Review");
-            int temp = position - mVideoCursor.getCount();
-            mReviewCursor.moveToPosition(temp);
-            ViewHolderReviews reviews = (ViewHolderReviews) holder;
-            reviews.bindViews(mContext, mReviewCursor);
+        else
+        {
+            if (position <= mVideoCursor.getCount())
+            {
+                Log.v("Bind", "Video");
+                mVideoCursor.moveToPosition(position - mMovieCursor.getCount());
+                ViewHolderVideos videos = (ViewHolderVideos) holder;
+                videos.iconView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mVideoCursor.moveToPosition(position - mMovieCursor.getCount());
+                        String key = mVideoCursor.getString(mVideoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + key));
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            mContext.startActivity(intent);
+                        } catch (ActivityNotFoundException ex) {
+                            Intent intent = new Intent(Intent.ACTION_VIEW,
+                                    Uri.parse("http://www.youtube.com/watch?v=" + key));
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            mContext.startActivity(intent);
+                        }
+                    }
+                });
+                videos.bindViews(mContext, mVideoCursor);
+            }
+            else
+            {
+                Log.v("Bind", "Review");
+                int temp = position - mMovieCursor.getCount() - mVideoCursor.getCount();
+                mReviewCursor.moveToPosition(temp);
+                ViewHolderReviews reviews = (ViewHolderReviews) holder;
+                reviews.bindViews(mContext, mReviewCursor);
+            }
         }
     }
 
     @Override
     public int getItemCount() {
-        return (mVideoCursor.getCount() + mReviewCursor.getCount());
+        return (mVideoCursor.getCount() + mReviewCursor.getCount() + mMovieCursor.getCount());
     }
 
 
@@ -125,6 +156,78 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             super(itemView);
         }
     }*/
+
+    public class ViewHolderMovieDetails extends RecyclerView.ViewHolder{
+
+        public final ImageView iconView;
+        public final TextView titleView,releaseDateView,userRatingView,synopsisView;
+        public final Button btn;
+
+        public ViewHolderMovieDetails(View itemView)
+        {
+            super(itemView);
+            btn = (Button) itemView.findViewById(R.id.movie_favourite_button);
+            iconView = (ImageView) itemView.findViewById(R.id.movie_poster);
+            titleView = (TextView) itemView.findViewById(R.id.movie_title);
+            releaseDateView = (TextView) itemView.findViewById(R.id.movie_release_date);
+            userRatingView = (TextView) itemView.findViewById(R.id.movie_user_rating);
+            synopsisView = (TextView) itemView.findViewById(R.id.movie_synopsis);
+        }
+
+        public void bindViews(Context context, Cursor cursor)
+        {
+            final String movie_id = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE_ID));
+            final String original_title = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE));
+            final String poster_path = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_POSTER_PATH));
+            final String release_date = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_RELEASE_DATE));
+            final String overview = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_OVERVIEW));
+            final String vote_average = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE));
+
+            String formatted_release_date = Utility.getFormattedMonthDay(release_date);
+            titleView.setText(original_title);
+            releaseDateView.setText(formatted_release_date);
+            userRatingView.setText(vote_average);
+            synopsisView.setText(overview);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Uri uri = MovieContract.FavouriteEntry.buildFavouriteMovieUriFromId(movie_id);
+                    Cursor cur = mContext.getContentResolver().query(
+                            uri,
+                            new String[]{MovieContract.FavouriteEntry._ID},
+                            MovieContract.FavouriteEntry.COLUMN_MOVIE_ID + " = ?",
+                            new String[]{movie_id},
+                            null);
+                    if(cur.getCount() == 0)
+                    {
+                        Uri fav = MovieContract.FavouriteEntry.CONTENT_URI;
+                        ContentValues cv = new ContentValues();
+                        cv.put(MovieContract.FavouriteEntry.COLUMN_MOVIE_ID,movie_id);
+                        cv.put(MovieContract.FavouriteEntry.COLUMN_ORIGINAL_TITLE,original_title);
+                        cv.put(MovieContract.FavouriteEntry.COLUMN_OVERVIEW,overview);
+                        cv.put(MovieContract.FavouriteEntry.COLUMN_POSTER_PATH,poster_path);
+                        cv.put(MovieContract.FavouriteEntry.COLUMN_RELEASE_DATE,release_date);
+                        cv.put(MovieContract.FavouriteEntry.COLUMN_VOTE_AVERAGE,vote_average);
+
+                        Uri resultUri = mContext.getContentResolver().insert(fav,cv);
+                        Toast.makeText(mContext,"Movie added to favourites",Toast.LENGTH_SHORT).show();
+                        Log.v(LOG_TAG + "Data Inserted",resultUri.toString());
+                        cur.close();
+                    }
+                    else
+                    {
+                        Toast.makeText(mContext,"Movie already added to favourites",Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
+            /*Uri builtThumbUri = Uri.parse(BASE_URI).buildUpon()
+                    .appendPath(key)
+                    .appendPath(IMG_PATH)
+                    .build();*/
+            Picasso.with(context).load(poster_path).into(iconView);
+        }
+    }
 
     public class ViewHolderVideos extends RecyclerView.ViewHolder{
 

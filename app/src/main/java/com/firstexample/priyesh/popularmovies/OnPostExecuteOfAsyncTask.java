@@ -8,5 +8,5 @@ import android.content.Context;
 public interface OnPostExecuteOfAsyncTask {
     void afterVideoPostExecute(Context c);
     void afterReviewPostExecute(Context c);
-    void updateRecyclerView();
+    void updateRecyclerView(Context c);
 }

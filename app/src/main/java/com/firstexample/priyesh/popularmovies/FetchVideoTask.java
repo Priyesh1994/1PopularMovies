@@ -121,7 +121,7 @@ public class FetchVideoTask extends AsyncTask<String,Void,String> {
                 Log.v("Rows InsertedInVideo: ",(rowsInserted+""));
             }
             listener.afterVideoPostExecute(mContext);
-            listener.updateRecyclerView();
+            listener.updateRecyclerView(mContext);
         } catch (JSONException e) {
             e.printStackTrace();
         }

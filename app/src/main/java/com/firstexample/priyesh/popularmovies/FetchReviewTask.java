@@ -123,7 +123,7 @@ public class FetchReviewTask extends AsyncTask<String,Void,String> {
                 Log.v("Rows InsertedInReview: ",(rowsInserted+""));
             }
             listener.afterReviewPostExecute(mContext);
-            listener.updateRecyclerView();
+            listener.updateRecyclerView(mContext);
         } catch (JSONException e) {
             e.printStackTrace();
         }

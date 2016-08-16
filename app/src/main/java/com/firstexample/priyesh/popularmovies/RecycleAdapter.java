@@ -30,6 +30,8 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int MOVIE_CURSOR = 0;
     private static final int VIDEO_CURSOR = 1;
     private static final int REVIEW_CURSOR = 2;
+    private static final int VIDEO_HEADER = 3;
+    private static final int REVIEW_HEADER = 4;
     final String BASE_URI = "http://img.youtube.com/vi/";
     final String IMG_PATH = "0.jpg";
 
@@ -42,18 +44,31 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public int getItemViewType(int position) {
-        int temp = mVideoCursor.getCount();
-        Log.v("Total",(temp+mReviewCursor.getCount())+mMovieCursor.getCount()+"");
-        Log.v("Temp",temp+"");
         Log.v("Position",position+"");
         if (position == 0)
         {
             return MOVIE_CURSOR;
         }
+        else if(mVideoCursor != null && position == 1)
+        {
+            return VIDEO_HEADER;
+        }
+        else if((mReviewCursor != null && mVideoCursor != null && position == mVideoCursor.getCount() + 2)
+                || (mReviewCursor != null && mVideoCursor == null && position == 1))
+        {
+            return REVIEW_HEADER;
+        }
         else {
-            if (position <= temp)
-                return VIDEO_CURSOR;
+            if (mVideoCursor != null  && position <= mVideoCursor.getCount() + 1
+                    )
+            {
+                //TODO: check for null in cursor
+                //if (position <= mVideoCursor.getCount()) {
+                    return VIDEO_CURSOR;
+                //}
+            }
             else
+            //if (mReviewCursor != null)
                 return REVIEW_CURSOR;
         }
         //return super.getItemViewType(position);
@@ -88,6 +103,20 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 viewHolder = new ViewHolderReviews(itemType);
                 break;
             }
+            case VIDEO_HEADER:
+            {
+                View itemType = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.video_item, parent, false);
+                viewHolder = new ViewHolderVideoHeader(itemType);
+                break;
+            }
+            case REVIEW_HEADER:
+            {
+                View itemType = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.review_item, parent, false);
+                viewHolder = new ViewHolderReviewHeader(itemType);
+                break;
+            }
             /*default:
             {
                 View v = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
@@ -107,12 +136,24 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ViewHolderMovieDetails movieDetails = (ViewHolderMovieDetails) holder;
             movieDetails.bindViews(mContext, mMovieCursor);
         }
+        else if(mVideoCursor != null && position == 1)
+        {
+            //return VIDEO_HEADER;
+        }
+        //1: 1 for VideoHeader
+        else if((mReviewCursor != null && mVideoCursor != null && position == mVideoCursor.getCount() + mMovieCursor.getCount() + 1)
+                || (mReviewCursor != null && mVideoCursor == null && position == mMovieCursor.getCount()))
+        {
+            //return REVIEW_HEADER;
+        }
         else
         {
-            if (position <= mVideoCursor.getCount())
+            int a = mVideoCursor.getCount();
+            if (mVideoCursor != null && position <= mVideoCursor.getCount() + 1)
             {
                 Log.v("Bind", "Video");
-                mVideoCursor.moveToPosition(position - mMovieCursor.getCount());
+                //1 for video header
+                mVideoCursor.moveToPosition(position - mMovieCursor.getCount() - 1);
                 ViewHolderVideos videos = (ViewHolderVideos) holder;
                 videos.iconView.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -136,7 +177,18 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             else
             {
                 Log.v("Bind", "Review");
-                int temp = position - mMovieCursor.getCount() - mVideoCursor.getCount();
+                int temp;
+                if(mVideoCursor == null)
+                {
+                    //1 for review header
+                    temp = position - mMovieCursor.getCount() - 1;
+                }
+                else
+                {
+                    //1 for review header
+                    //1 for video header
+                    temp = position - mMovieCursor.getCount() - mVideoCursor.getCount() - 1 - 1;
+                }
                 mReviewCursor.moveToPosition(temp);
                 ViewHolderReviews reviews = (ViewHolderReviews) holder;
                 reviews.bindViews(mContext, mReviewCursor);
@@ -146,7 +198,13 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public int getItemCount() {
-        return (mVideoCursor.getCount() + mReviewCursor.getCount() + mMovieCursor.getCount());
+        int count = 0;
+        //1 is added for header
+        if(mVideoCursor != null) count = count + mVideoCursor.getCount() + 1 ;
+        //1 is added for header
+        if (mReviewCursor != null) count = count + mReviewCursor.getCount() + 1 ;
+        if (mMovieCursor != null) count = count + mMovieCursor.getCount();
+        return count;
     }
 
 
@@ -253,6 +311,20 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     .appendPath(IMG_PATH)
                     .build();
             Picasso.with(context).load(builtThumbUri).into(iconView);
+        }
+    }
+
+    public class ViewHolderVideoHeader extends RecyclerView.ViewHolder
+    {
+        public ViewHolderVideoHeader(View itemView) {
+            super(itemView);
+        }
+    }
+
+    public class ViewHolderReviewHeader extends RecyclerView.ViewHolder
+    {
+        public ViewHolderReviewHeader(View itemView) {
+            super(itemView);
         }
     }
 

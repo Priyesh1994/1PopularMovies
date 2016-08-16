@@ -1,7 +1,6 @@
 package com.firstexample.priyesh.popularmovies;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -43,6 +42,8 @@ public class MainMovieFragment extends Fragment {
     final String MOVIE_ID = "id";
     private String mMovieString;
     private GridView mGridView;
+    private int mPosition = GridView.INVALID_POSITION;
+    private static final String SELECTED_KEY = "selected_position";
 
     public MainMovieFragment() {
         super();
@@ -54,13 +55,35 @@ public class MainMovieFragment extends Fragment {
         setHasOptionsMenu(true);
     }
 
+    public interface CallBack
+    {
+        public void onItemSelected(Bundle bundle);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mRootView = inflater.inflate(R.layout.fragment_main_movie, container, false);
         mGridView = (GridView) mRootView.findViewById(R.id.movies_grid);
         updateMovies();
+        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
+            // The listview probably hasn't even been populated yet.  Actually perform the
+            // swapout in onLoadFinished.
+            mPosition = savedInstanceState.getInt(SELECTED_KEY);
+        }
+        if(savedInstanceState != null && mPosition != GridView.INVALID_POSITION)
+        {
+            mGridView.smoothScrollToPosition(mPosition);
+            //mGridView.smoothScrollByOffset(mPosition);
+        }
         return mRootView;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if(mPosition != GridView.INVALID_POSITION)
+            outState.putInt(SELECTED_KEY,mPosition);
+        super.onSaveInstanceState(outState);
     }
 
     public void updateMovies() {
@@ -99,7 +122,7 @@ public class MainMovieFragment extends Fragment {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     cur.moveToPosition(position);
-                    Intent intent = new Intent(getActivity(), DetailActivity.class);
+                    //Intent intent = new Intent(getActivity(), DetailActivity.class);
                     Bundle bundle = new Bundle();
                     if (cur.getCount() > 0) {
                         if (!first_sort_order.equals(getString(R.string.pref_sort_favourites))) {
@@ -131,8 +154,11 @@ public class MainMovieFragment extends Fragment {
                         bundle.putString(getString(R.string.isFavourite),
                                 getString(R.string.isNoFavourite));
                     }
-                    intent.putExtras(bundle);
-                    startActivity(intent);
+                    ((CallBack) getActivity()).onItemSelected(bundle);
+                    //intent.putExtras(bundle);
+                    //startActivity(intent);
+                    mPosition = position;
+                    mGridView.setSelection(mPosition);
                 }
             });
         }

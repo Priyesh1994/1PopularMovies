@@ -38,7 +38,9 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
         if(savedInstanceState == null )
         {
+            Bundle bundle = getIntent().getExtras();
             DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(bundle);
 
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.detail_movie_container,fragment)

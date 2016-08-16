@@ -13,7 +13,7 @@ import android.widget.Toast;
 
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MainMovieFragment.CallBack{
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private String first_sort_order;
@@ -93,6 +93,25 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onItemSelected(Bundle bundle) {
+        if(mTwoPane)
+        {
+            DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(bundle);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.detail_movie_container,fragment)
+                    .commit();
+        }
+        else
+        {
+            Intent intent = new Intent(this, DetailActivity.class);
+            intent.putExtras(bundle);
+            startActivity(intent);
+        }
     }
 
 /*    @Override

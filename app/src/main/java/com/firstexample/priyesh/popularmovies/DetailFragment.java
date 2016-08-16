@@ -1,7 +1,6 @@
 package com.firstexample.priyesh.popularmovies;
 
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -83,8 +82,8 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
             }
         });*/
 
-        Intent intent = getActivity().getIntent();
-        Bundle bundle = intent.getExtras();
+        //Intent intent = getActivity().getIntent();
+        Bundle bundle = getArguments();
         if(bundle == null) return null;
         String formatted_release_date = null;
         if (bundle != null) {

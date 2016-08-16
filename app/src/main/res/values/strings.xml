@@ -14,4 +14,6 @@
     <string name="isFavourite">Favourite</string>
     <string name="isNoFavourite">No</string>
     <string name="isYesFavourite">Yes</string>
+    <string name="Trailers">Trailers:</string>
+    <string name="Reviews">Reviews:</string>
 </resources>

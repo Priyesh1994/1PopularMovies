@@ -9,7 +9,9 @@
     android:gravity="center"
     android:adjustViewBounds="true"
     android:verticalSpacing="5dp"
-    android:listSelector="@color/teal"
+    android:horizontalSpacing="5dp"
+    android:choiceMode="singleChoice"
+    android:listSelector="@drawable/grid_selector"
     tools:context="com.firstexample.priyesh.popularmovies.MainActivity">
 
 </GridView>

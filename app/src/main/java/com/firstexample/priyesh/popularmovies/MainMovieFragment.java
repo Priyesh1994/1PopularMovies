@@ -65,17 +65,27 @@ public class MainMovieFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mRootView = inflater.inflate(R.layout.fragment_main_movie, container, false);
         mGridView = (GridView) mRootView.findViewById(R.id.movies_grid);
+        //mGridView.setBa
         updateMovies();
         if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
-            // The listview probably hasn't even been populated yet.  Actually perform the
-            // swapout in onLoadFinished.
             mPosition = savedInstanceState.getInt(SELECTED_KEY);
+            mGridView.setSelection(mPosition);
+            long POST_MS_DELAY = 500;
+            mGridView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    int offset = 200;
+                    int SMOOTH_SCROLL_MS_DURATION = 1000;
+                    mGridView.smoothScrollToPositionFromTop(mPosition, offset, SMOOTH_SCROLL_MS_DURATION);
+                }
+            }, POST_MS_DELAY);
+            //mGridView.smoothScrollToPosition(mPosition);
         }
-        if(savedInstanceState != null && mPosition != GridView.INVALID_POSITION)
+        /*if(savedInstanceState != null && mPosition != GridView.INVALID_POSITION)
         {
             mGridView.smoothScrollToPosition(mPosition);
             //mGridView.smoothScrollByOffset(mPosition);
-        }
+        }*/
         return mRootView;
     }
 
@@ -116,7 +126,8 @@ public class MainMovieFragment extends Fragment {
                 mPosterArray = getCursorArray(cur);
             }
             mGridView.setAdapter(new ImageAdapter(getContext(), mPosterArray));
-            mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+            {
                 public String movie_id;
 
                 @Override
@@ -159,6 +170,8 @@ public class MainMovieFragment extends Fragment {
                     //startActivity(intent);
                     mPosition = position;
                     mGridView.setSelection(mPosition);
+                    //mGridView.setBackgroundColor();
+                    //mGridView.setBackgroundResource(R.drawable.grid_selector);
                 }
             });
         }

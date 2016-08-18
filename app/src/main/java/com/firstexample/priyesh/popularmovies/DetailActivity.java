@@ -2,8 +2,10 @@ package com.firstexample.priyesh.popularmovies;
 
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -33,6 +35,18 @@ public class DetailActivity extends AppCompatActivity {
     private ListView mListViewForReviews;
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                // app icon in action bar clicked; goto parent activity.
+                this.finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
@@ -46,6 +60,9 @@ public class DetailActivity extends AppCompatActivity {
                     .add(R.id.detail_movie_container,fragment)
                     .commit();
         }
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null)
+            actionBar.setDisplayHomeAsUpEnabled(true);
 
         /*mRecyclerView = (RecyclerView) findViewById(R.id.video_review_recycler_view);
         mLayoutManager = new LinearLayoutManager(this);

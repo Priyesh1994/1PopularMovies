@@ -148,7 +148,6 @@ public class RecycleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
         else
         {
-            int a = mVideoCursor.getCount();
             if (mVideoCursor != null && position <= mVideoCursor.getCount() + 1)
             {
                 Log.v("Bind", "Video");

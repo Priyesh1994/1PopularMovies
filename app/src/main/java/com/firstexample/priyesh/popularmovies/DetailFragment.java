@@ -1,24 +1,31 @@
 package com.firstexample.priyesh.popularmovies;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.ShareActionProvider;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.firstexample.priyesh.popularmovies.data.MovieContract;
 
 /**
  * Created by PRIYESH on 02-08-2016.
+ * Detail fragment
  */
 public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask{
 
@@ -30,14 +37,39 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
     private static RecyclerView.Adapter mRecycleAdapter;
     private static RecyclerView.LayoutManager mLayoutManager;
     private static int flag = 0;
-    Button btn;
-    String original_title = null, overview = null, release_date = null, vote_average = null, poster_path = null, isFavourite = null;
-    ImageView movie_poster;
+    String isFavourite = null;
+    private ShareActionProvider mShareActionProvider;
+    private String mForecast;
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.detailfragment,menu);
+        MenuItem menuItem = menu.findItem(R.id.action_share);
+
+        mShareActionProvider =
+                (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+
+        if(mForecast  != null)
+        {
+            mShareActionProvider.setShareIntent(createShareForecastIntent());
+        }
+
+    }
+
+    private Intent createShareForecastIntent() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT,mForecast);
+        return shareIntent;
+    }
+
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
+        setHasOptionsMenu(true);
 
         //Initialize the recycler view
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.video_review_recycler_view);
@@ -85,7 +117,6 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
         //Intent intent = getActivity().getIntent();
         Bundle bundle = getArguments();
         if(bundle == null) return null;
-        String formatted_release_date = null;
         if (bundle != null) {
             isFavourite = bundle.getString(getString(R.string.isFavourite));
             Uri uri;
@@ -150,19 +181,31 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
 
         mRecycleAdapter = new RecycleAdapter(getContext(), mVideoCursor, mReviewCursor, mMovieCursor);
         mRecyclerView.setAdapter(mRecycleAdapter);
-        mRecyclerView.setOnClickListener(new View.OnClickListener() {
+        /*mRecyclerView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
             }
-        });
+        });*/
         /*mListViewForVideos = (ListView) findViewById(R.id.listView_youtube_videos);
         mVideoAdapter = new VideoAdapter(this, mVideoCursor, 0);
         mListViewForVideos.setAdapter(mVideoAdapter);*/
         if (mVideoCursor.getCount() == 0)
         {
-            FetchVideoTask fetchVideoTask = new FetchVideoTask(getContext(), list);
-            fetchVideoTask.execute(movie_id);
+            if (isOnline()) {
+                FetchVideoTask fetchVideoTask = new FetchVideoTask(getContext(), list);
+                fetchVideoTask.execute(movie_id);
+            }
+            else
+                Toast.makeText(getActivity(),"Network Issue",Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            mVideoCursor.moveToFirst();
+            String key = mVideoCursor.getString(mVideoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
+            String link = String.valueOf(Uri.parse("http://www.youtube.com/watch?v=" + key));
+            String desc = "Have a look";
+            mForecast = String.format("%s : %s",desc,link);
         }
 
 
@@ -171,9 +214,14 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
         mListViewForReviews.setAdapter(mReviewAdapter);*/
         if (mReviewCursor.getCount() == 0)
         {
-            FetchReviewTask fetchReviewTask = new FetchReviewTask(getContext(), list);
-            fetchReviewTask.execute(movie_id);
+            if (isOnline()) {
+                FetchReviewTask fetchReviewTask = new FetchReviewTask(getContext(), list);
+                fetchReviewTask.execute(movie_id);
+            }
+            else
+                Toast.makeText(getActivity(),"Network Issue",Toast.LENGTH_SHORT).show();
         }
+
 //        getSupportLoaderManager().initLoader(VIDEO_LOADER, null, this);
 //        getSupportLoaderManager().initLoader(REVIEW_LOADER, null, this);
 
@@ -194,6 +242,12 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
                 MovieContract.VideoEntry.COLUMN_MOVIE_ID + " = ? ",
                 new String[]{movie_id},
                 null);
+        if (mVideoCursor != null)
+        {
+            mVideoCursor.moveToFirst();
+            String key = mVideoCursor.getString(mVideoCursor.getColumnIndex(MovieContract.VideoEntry.COLUMN_VIDEO_KEY));
+            mForecast = String.valueOf(Uri.parse("http://www.youtube.com/watch?v=" + key));
+        }
     }
 
     @Override
@@ -227,5 +281,14 @@ public class DetailFragment extends Fragment implements OnPostExecuteOfAsyncTask
         }
         else
             flag++;
+    }
+
+    //To check for internet connection
+    public boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null &&
+                cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 }

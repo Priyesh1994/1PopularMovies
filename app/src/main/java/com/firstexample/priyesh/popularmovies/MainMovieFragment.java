@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -97,8 +96,8 @@ public class MainMovieFragment extends Fragment {
     }
 
     public void updateMovies() {
-        if(isOnline())
-        {
+//        if(isOnline())
+//        {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             first_sort_order = prefs.getString(getString(R.string.sort_key),
                     getString(R.string.pref_sort_popular));
@@ -110,12 +109,18 @@ public class MainMovieFragment extends Fragment {
                 if (cur.getCount() > 0) {
                     mGridView.setAdapter(new ImageAdapter(getContext(), mPosterArray));
                 } else {
-                    FetchMovieTask fetchMovieTask = new FetchMovieTask(getContext());
-                    try {
-                        mMovieString = fetchMovieTask.execute(first_sort_order).get();
-                        mPosterArray = getDataFromJSON(mMovieString);
-                    } catch (InterruptedException | ExecutionException | JSONException e) {
-                        e.printStackTrace();
+                    if (isOnline()) {
+                        FetchMovieTask fetchMovieTask = new FetchMovieTask(getContext());
+                        try {
+                            mMovieString = fetchMovieTask.execute(first_sort_order).get();
+                            mPosterArray = getDataFromJSON(mMovieString);
+                        } catch (InterruptedException | ExecutionException | JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    else
+                    {
+                        Toast.makeText(getContext(),"Network Issue",Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -174,12 +179,7 @@ public class MainMovieFragment extends Fragment {
                     //mGridView.setBackgroundResource(R.drawable.grid_selector);
                 }
             });
-        }
-        else
-        {
-            Toast.makeText(getActivity(),"Network Issue",Toast.LENGTH_SHORT).show();
-            Log.v(LOG_TAG,"Network error");
-        }
+        //}
     }
 
     private String[] getDataFromJSON(String movieString) throws JSONException

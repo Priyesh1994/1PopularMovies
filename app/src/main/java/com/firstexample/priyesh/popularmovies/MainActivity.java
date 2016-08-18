@@ -63,9 +63,13 @@ public class MainActivity extends AppCompatActivity implements MainMovieFragment
             if (!first_sort_order.equals(prefs.getString(getString(R.string.sort_key),
                     getString(R.string.pref_sort_popular)))) {
                 if(!first_sort_order.equals(getString(R.string.pref_sort_favourites))) {
-                    int rowsDeleted = 0;
-                    rowsDeleted = getContentResolver().delete(MovieContract.MovieEntry.CONTENT_URI, null, null);
-                    Log.v(LOG_TAG + "Rows Deleted:", rowsDeleted + "");
+                    int rowsDeletedInMovie = 0;
+                    rowsDeletedInMovie = getContentResolver().delete(MovieContract.MovieEntry.CONTENT_URI, null, null);
+                    int rowsDeletedInVideo = getContentResolver().delete(MovieContract.VideoEntry.CONTENT_URI, null, null);
+                    int rowsDeletedInReview = getContentResolver().delete(MovieContract.ReviewEntry.CONTENT_URI, null, null);
+                    Log.v(LOG_TAG + "Rows Deleted:", rowsDeletedInMovie + "");
+                    Log.v(LOG_TAG + "Rows Deleted in Review:", rowsDeletedInReview + "");
+                    Log.v(LOG_TAG + "Rows Deleted in Video:", rowsDeletedInVideo + "");
                 }
                 mainMovieFragment.updateMovies();
             }

@@ -16,4 +16,5 @@
     <string name="isYesFavourite">Yes</string>
     <string name="Trailers">Trailers:</string>
     <string name="Reviews">Reviews:</string>
+    <string name="action_share">Share</string>
 </resources>
